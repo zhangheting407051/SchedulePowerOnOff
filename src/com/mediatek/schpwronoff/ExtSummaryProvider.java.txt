@@ -1,0 +1,131 @@
+package com.mediatek.schpwronoff;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
+import android.database.DataSetObserver;
+import android.text.format.DateFormat;
+import android.util.Log;
+
+import com.android.settings.dashboard.SummaryLoader;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+public final class ExtSummaryProvider {
+    private static final String TAG = ExtSummaryProvider.class.getSimpleName();
+
+    private static class SummaryProvider implements
+            SummaryLoader.SummaryProvider {
+
+        private final Context mContext;
+        private final SummaryLoader mSummaryLoader;
+        private Context mDesContext;
+        private Cursor mCursor;
+        private List<Alarm> mAlarmList = new ArrayList<>();
+
+        private static final String SUMMARY_FORMAT_BOTH = "ON: %s, OFF: %s";
+        private static final String SUMMARY_FORMAT_ON = "ON: %s";
+        private static final String SUMMARY_FORMAT_OFF = "OFF: %s";
+
+        private DataSetObserver mDataSetObserver = new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                updateSummary();
+            }
+
+            @Override
+            public void onInvalidated() {
+                updateSummary();
+            }
+        };
+
+        public SummaryProvider(Context context, SummaryLoader summaryLoader) {
+            mContext = context;
+            mSummaryLoader = summaryLoader;
+            try {
+                mDesContext = mContext.createPackageContext(
+                        ExtSummaryProvider.class.getPackage().getName(),
+                        Context.CONTEXT_INCLUDE_CODE
+                                | Context.CONTEXT_IGNORE_SECURITY);
+            } catch (NameNotFoundException e) {
+                Log.d(TAG, "NameNotFoundException", e);
+            }
+        }
+
+        @Override
+        public void setListening(boolean listening) {
+            Log.d(TAG, "setListening: " + listening);
+            if (listening) {
+                if (mCursor == null || mCursor.isClosed()) {
+                    mCursor = Alarms.getAlarmsCursor(mDesContext.getContentResolver());
+                    mCursor.registerDataSetObserver(mDataSetObserver);
+                }
+                updateSummary();
+            } else {
+                if (mCursor != null && !mCursor.isClosed()) {
+                    mCursor.unregisterDataSetObserver(mDataSetObserver);
+                    mCursor.close();
+                }
+            }
+        }
+
+        private void updateSummary() {
+            String summary = getSummary();
+            Log.d(TAG, "summary: " + summary);
+            mSummaryLoader.setSummary(this, summary);
+        }
+
+        private String getSummary() {
+            mAlarmList.clear();
+            if (mCursor == null || mCursor.isClosed()) {
+                return null;
+            }
+            mCursor.moveToPosition(-1);
+            Log.d(TAG, "mCursor.getCount() " + mCursor.getCount());
+            while (mCursor.moveToNext()) {
+                mAlarmList.add(new Alarm(mCursor));
+            }
+            String onStr = null;
+            String offStr = null;
+            String summary = null;
+            for (Alarm alarm : mAlarmList) {
+                if (alarm.mEnabled) {
+                    final Calendar cal = Calendar.getInstance();
+                    cal.set(Calendar.HOUR_OF_DAY, alarm.mHour);
+                    cal.set(Calendar.MINUTE, alarm.mMinutes);
+                    String timeStr = DateFormat.getTimeFormat(mDesContext).format(cal.getTime());
+                    if (alarm.mId == 1) {
+                        onStr = timeStr;
+                    } else {
+                        offStr = timeStr;
+                    }
+                }
+            }
+            if (onStr == null &&  offStr == null) {
+                summary = mDesContext.getString(R.string.switch_off_text);
+            } else if (onStr != null && offStr != null) {
+                summary = String.format(SUMMARY_FORMAT_BOTH, onStr, offStr);
+            } else if (onStr != null) {
+                summary = String.format(SUMMARY_FORMAT_ON, onStr);
+            } else if (offStr != null) {
+                summary = String.format(SUMMARY_FORMAT_OFF, offStr);
+            }
+            return summary;
+        }
+    }
+
+    public static final SummaryLoader.SummaryProviderFactory SUMMARY_PROVIDER_FACTORY
+            = new SummaryLoader.SummaryProviderFactory() {
+
+        @Override
+        public SummaryLoader.SummaryProvider createSummaryProvider(
+                Activity activity, SummaryLoader summaryLoader) {
+            Log.d(TAG, "create summary provider");
+            return new SummaryProvider(activity, summaryLoader);
+        }
+
+    };
+}

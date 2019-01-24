@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 begin-->
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 end-->
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 begin-->
+    <string name="schedule_power_on_off_settings_title">பவர் ஆன் &amp; ஆஃப் ஐத் திட்டமிடு</string>
+    <string name="schedule_power_on_off_time">நேரம்</string>
+    <string name="schedule_power_on_off_repeat">மீண்டும்</string>
+    <string name="schedule_power_on_off_set">பவர் ஆன் &amp; ஆஃப் ஐத் திட்டமிடுதலை அமை</string>
+    <string name="schedule_power_on_set">பவர் ஆன் திட்டமிடுதலை அமை</string>
+    <string name="schedule_power_off_set">பவர் ஆஃப் திட்டமிடுதலை அமை</string>
+    <string name="enable_schpwr">இயக்கு</string>
+    <string name="disable_schpwr">முடக்கு</string>
+    <string-array name="alarm_set">
+        <item>இப்போதிலிருந்து 1 நிமிடத்திற்கும் குறைவான நேரத்தில் பவர் ஆன் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> மற்றும் <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆன் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>இப்போதிலிருந்து 1 நிமிடத்திற்கும் குறைவான நேரத்தில் பவர் ஆஃப் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> மற்றும் <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+        <item>பவர் ஆஃப் இப்போதிலிருந்து <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>மற்றும் <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> -இல் அமைக்கப்பட்டுள்ளது.</item>
+    </string-array>
+    <string name="day">"1 நாள்"</string>
+    <string name="days">"<xliff:g id="days">%s</xliff:g> நாட்கள்"</string>
+    <string name="hour">1 மணிநேரம்</string>
+    <string name="hours"><xliff:g id="hours">%s</xliff:g> மணிநேரம்</string>
+    <string name="minute">"1 நிமிடம்"</string>
+    <string name="minutes">"<xliff:g id="minutes">%s</xliff:g> நிமிடங்கள்"</string>
+    <string name="every_day">தினமும்</string>
+    <string name="never">ஒருபோதும் வேண்டாம்</string>
+    <string name="done">முடிந்தது</string>
+    <string name="revert">மாற்றியமை</string>
+    <string name="schpwr_shutdown_message">"உங்கள் சாதனம் <xliff:g id="seconds">%s</xliff:g> வினாடிகளில் அணைக்கப்படும்"</string>
+    <string name="schpwr_shutdown_message_second">"உங்கள் சாதனம் <xliff:g id="second">%s</xliff:g> வினாடியில் அணைக்கப்படும்"</string>
+    <string name="switch_off_text">ஆஃப்</string>
+    <string name="invalid_time_prompt">பவர் ஆன்&amp;ஆஃப் நேரம் வெவ்வேறாக இருக்க வேண்டும்.</string>
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 end-->
+</resources>

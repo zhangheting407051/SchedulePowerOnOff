@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 begin-->
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 end-->
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 begin-->
+    <string name="schedule_power_on_off_settings_title">Jadualkan waktu hidup &amp; mati</string>
+    <string name="schedule_power_on_off_time">Waktu</string>
+    <string name="schedule_power_on_off_repeat">Ulang</string>
+    <string name="schedule_power_on_off_set">Tetapkan jadualkan kuasa hidup &amp; mati</string>
+    <string name="schedule_power_on_set">Tetapkan jadualkan kuasa dihidupkan</string>
+    <string name="schedule_power_off_set">Tetapkan jadualkan kuasa dimatikan</string>
+    <string name="enable_schpwr">Dayakan</string>
+    <string name="disable_schpwr">Lumpuhkan</string>
+    <string-array name="alarm_set">
+        <item>Kuasa dihidupkan ini ditetapkan untuk kurang daripada 1 minit dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dan <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa hidup ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa dimatikan ini ditetapkan kurang daripada 1 minit dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dan <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+        <item>Kuasa mati ini ditetapkan untuk <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, dan <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> dari sekarang.</item>
+    </string-array>
+    <string name="day">"1 hari"</string>
+    <string name="days">"<xliff:g id="days">%s</xliff:g> hari"</string>
+    <string name="hour">1 jam</string>
+    <string name="hours"><xliff:g id="hours">%s</xliff:g> jam</string>
+    <string name="minute">"1 minit"</string>
+    <string name="minutes">"<xliff:g id="minutes">%s</xliff:g> minit"</string>
+    <string name="every_day">Setiap hari</string>
+    <string name="never">Jangan</string>
+    <string name="done">Selesai</string>
+    <string name="revert">Berbalik</string>
+    <string name="schpwr_shutdown_message">"Peranti anda akan ditutup dalam <xliff:g id="seconds">%s</xliff:g> saat"</string>
+    <string name="schpwr_shutdown_message_second">"Peranti anda akan ditutup dalam <xliff:g id="second">%s</xliff:g> saat"</string>
+    <string name="switch_off_text">Mati</string>
+    <string name="invalid_time_prompt">Waktu kuasa HIDUP&amp;MATI mestilah berbeza.</string>
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 end-->
+</resources>

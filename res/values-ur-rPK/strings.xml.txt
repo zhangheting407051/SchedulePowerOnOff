@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 begin-->
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 end-->
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 begin-->
+    <string name="schedule_power_on_off_settings_title">پاور آن اور آف کو شیڈیول کریں</string>
+    <string name="schedule_power_on_off_time">وقت</string>
+    <string name="schedule_power_on_off_repeat">دہرائیں</string>
+    <string name="schedule_power_on_off_set">پاور آن اور آف شیڈیول ترتیب دیں</string>
+    <string name="schedule_power_on_set">پاور آن شیڈیول ترتیب دیں</string>
+    <string name="schedule_power_off_set">پاور آف شیڈیول ترتیب دیں</string>
+    <string name="enable_schpwr">فعال کریں</string>
+    <string name="disable_schpwr">غیر فعال کریں</string>
+    <string-array name="alarm_set">
+        <item>یہ پاور آن اب سے 1 منٹ سے کم کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> اور <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> اور <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> اور <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آن اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>، <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>، اور<xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے 1 منٹ سے کم کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> اور <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> اور <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> اور <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+        <item>یہ پاور آف اب سے <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>، <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>، اور<xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> کے لیے سیٹ ہے۔</item>
+    </string-array>
+    <string name="day">"1 دن"</string>
+    <string name="days">"<xliff:g id="days">%s</xliff:g> دن"</string>
+    <string name="hour">1 گھنٹہ</string>
+    <string name="hours"><xliff:g id="hours">%s</xliff:g> گھنٹے</string>
+    <string name="minute">"1 منٹ"</string>
+    <string name="minutes">"<xliff:g id="minutes">%s</xliff:g> منٹ"</string>
+    <string name="every_day">روزانہ</string>
+    <string name="never">کبھی نہیں</string>
+    <string name="done">ہوگیا</string>
+    <string name="revert">پلٹائیں</string>
+    <string name="schpwr_shutdown_message">"آپ کا آلہ بند ہو جائے گا <xliff:g id="seconds">%s</xliff:g> سیکنڈ میں"</string>
+    <string name="schpwr_shutdown_message_second">"آپ کا آلہ بند ہو جائے گا <xliff:g id="second">%s</xliff:g> سیکنڈ میں"</string>
+    <string name="switch_off_text">آف</string>
+    <string name="invalid_time_prompt">پاور آن اور آف کا وقت مختلف ہونا چاہیے۔</string>
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 end-->
+</resources>

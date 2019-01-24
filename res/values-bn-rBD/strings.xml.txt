@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 begin-->
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 end-->
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 begin-->
+    <string name="schedule_power_on_off_settings_title">পাওয়ার চালু এবং বন্ধের সময়সূচি স্থির করুন</string>
+    <string name="schedule_power_on_off_time">সময়</string>
+    <string name="schedule_power_on_off_repeat">পুনরাবৃত্তি করুন</string>
+    <string name="schedule_power_on_off_set">পাওয়ার চালু এবং বন্ধের সময়সূচি সেট করুন</string>
+    <string name="schedule_power_on_set">পাওয়ার চালুর সময়সূচি সেট করুন</string>
+    <string name="schedule_power_off_set">পাওয়ার বন্ধের সময়সূচি সেট করুন</string>
+    <string name="enable_schpwr">সক্ষম করুন</string>
+    <string name="disable_schpwr">অক্ষম করুন</string>
+    <string-array name="alarm_set">
+        <item>এই পাওয়ারটি এখন থেকে 1 মিনিটেরও কম সময়ের জন্য সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="HOURS" example="2 hours">এর জন্য%2$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> এবং <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="MINUTES" example="2 minutes">এর জন্য%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="HOURS" example="2 hours">এর জন্য%2$s</xliff:g> এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি চালু এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ার বন্ধ এখন থেকে 1 মিনিটেরও কম সময়ের জন্য সেট আছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="HOURS" example="2 hours">এর জন্য%2$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> এবং <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="MINUTES" example="2 minutes">এর জন্য%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g> এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="HOURS" example="2 hours">এর জন্য%2$s</xliff:g> এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+        <item>এই পাওয়ারটি বন্ধ এখন থেকে <xliff:g id="DAYS" example="2 days">এর জন্য%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, এবং <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> সেট রয়েছে।</item>
+    </string-array>
+    <string name="day">"1 দিন"</string>
+    <string name="days">"<xliff:g id="days">%s</xliff:g> দিন"</string>
+    <string name="hour">1 ঘন্টা</string>
+    <string name="hours"><xliff:g id="hours">%s</xliff:g> ঘন্টা</string>
+    <string name="minute">"1 মিনিট"</string>
+    <string name="minutes">"<xliff:g id="minutes">%s</xliff:g> মিনিট"</string>
+    <string name="every_day">প্রতিদিন</string>
+    <string name="never">কখনোই নয়</string>
+    <string name="done">সম্পন্ন</string>
+    <string name="revert">ফেরান</string>
+    <string name="schpwr_shutdown_message">"আপনার ডিভাইসটি শাট ডাউন হবে <xliff:g id="seconds">%s</xliff:g> সেকেন্ডে"</string>
+    <string name="schpwr_shutdown_message_second">"আপনার ডিভাইসটি শাট ডাউন হবে <xliff:g id="second">%s</xliff:g> সেকেন্ডে"</string>
+    <string name="switch_off_text">বন্ধ আছে</string>
+    <string name="invalid_time_prompt">পাওয়ার বন্ধ ও চালু হওয়ার সময় অবশ্যই ভিন্ন হতে হবে।</string>
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 end-->
+</resources>

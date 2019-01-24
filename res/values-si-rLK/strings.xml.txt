@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 begin-->
+    <!--add by fankaijian@wind-mobi.com 2017-04-14 end-->
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 begin-->
+    <string name="schedule_power_on_off_settings_title">පණ ගැන්වීම හා ක්‍රියා විරහිත කිරීම සැලසුම් කරන්න</string>
+    <string name="schedule_power_on_off_time">වේලාව</string>
+    <string name="schedule_power_on_off_repeat">නැවත කරන්න</string>
+    <string name="schedule_power_on_off_set">පණ ගැන්වීම හා ක්‍රියා විරහිත කිරීම සකන්න</string>
+    <string name="schedule_power_on_set">පණ ගැන්වීම සකන්න</string>
+    <string name="schedule_power_off_set">ක්‍රියා විරහිත කිරීම සකන්න</string>
+    <string name="enable_schpwr">සබල කරන්න</string>
+    <string name="disable_schpwr">අබල කරන්න</string>
+    <string-array name="alarm_set">
+        <item>දැන් සිට මිනිත්තු 1කට අඩු කාලයක් සඳහා මෙම බලය ක්‍රියාත්මක කිරීම සකසා ඇත.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> සහ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම පණ ගැන්වීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>දැන් සිට මිනිත්තු 1කට අඩු කාලයක් සඳහා මෙම බලය ක්‍රියාවිරහිත කිරීම සකසා ඇත.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> සහ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g> සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g> සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+        <item>මෙම ක්‍රියා විරහිත කිරීම සකසා ඇත්තේ <xliff:g id="DAYS" example="2 days">%1$s</xliff:g>, <xliff:g id="HOURS" example="2 hours">%2$s</xliff:g>, සහ <xliff:g id="MINUTES" example="2 minutes">%3$s</xliff:g> දැන් සිට.</item>
+    </string-array>
+    <string name="day">"දින 1"</string>
+    <string name="days">"<xliff:g id="days">%s</xliff:g> දින"</string>
+    <string name="hour">පැය 1</string>
+    <string name="hours"><xliff:g id="hours">%s</xliff:g> පැය</string>
+    <string name="minute">"මිනිත්තු 1"</string>
+    <string name="minutes">"<xliff:g id="minutes">%s</xliff:g> විනාඩි"</string>
+    <string name="every_day">සෑමදිනකම</string>
+    <string name="never">කිසිදා නැත</string>
+    <string name="done">අවසන</string>
+    <string name="revert">ප්‍රතිවර්තනය කරන්න</string>
+    <string name="schpwr_shutdown_message">"ඔබේ උපාංගය තත්පර <xliff:g id="seconds">%s</xliff:g> කින් ක්‍රියා විරහිත වනු ඇත"</string>
+    <string name="schpwr_shutdown_message_second">" ඔබේ උපාංගය තත්පර <xliff:g id="second">%s</xliff:g> කින් ක්‍රියා විරහිත වනු ඇත "</string>
+    <string name="switch_off_text">ක්‍රියාවිරහිතයි</string>
+    <string name="invalid_time_prompt">පණගැන්වීමේ සහ ක්‍රියා විරහිත කිරීමේ වේලාවන් වෙනස් විය යුතුය.</string>
+    <!--add by fankaijian@wind-mobi.com 2017-05-04 end-->
+</resources>
