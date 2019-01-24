@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- liuxiaoshuan@wind-mobi.com added for country code 20170401 begin -->
+<voicemail>
+  <voicemailtmopl numeric="26002" vmnumber="+48602950000" carrier="T-Mobile"/>
+  <!-- yexumin@wind-mobi.com add 20170926 for panell-3575 begin -->
+  <voicemail numeric='26001' vmnumber='+48601222222' carrier='Poczta G³osowa'/>
+  <!-- yexumin@wind-mobi.com add 20170926 for panell-3575 end -->
+</voicemail>
+<!-- liuxiaoshuan@wind-mobi.com added for country code 20170401 end -->

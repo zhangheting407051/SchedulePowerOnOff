@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Android পরিষেবাগুলোর লাইব্রেরি</string>
+    <string name="notification_ranker">Android বিজ্ঞপ্তিকরণ র‌্যাঙ্কিংয়ের পরিষেবা</string>
+    <string name="notification_ranker_autobundle_explanation">র‌্যাঙ্কিংয়ের পরিষেবা দ্বারা স্বয়ংক্রিয়ভাবে আপডেট হয়েছে</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

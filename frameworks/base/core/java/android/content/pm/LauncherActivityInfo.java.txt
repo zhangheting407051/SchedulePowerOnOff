@@ -1,0 +1,276 @@
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.content.pm;
+
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.UserHandle;
+import android.os.UserManager;
+import android.util.DisplayMetrics;
+import android.util.Log;
+//caopei@wind-mobi.com 2017.03.03 start
+import android.app.ApplicationPackageManager;
+import android.os.RemoteException;
+import com.android.internal.telephony.ITelephony;
+import android.os.ServiceManager;
+import com.android.internal.telephony.TelephonyProperties;
+import android.text.TextUtils;
+import android.os.SystemProperties;
+import android.telephony.TelephonyManager;
+import android.options.wind.WindFeatureOptions;
+import android.options.wind.CountryCodeUtils;
+import com.android.internal.telephony.PhoneConstants;
+//caopei@wind-mobi.com 2017.03.03 end
+/**
+ * A representation of an activity that can belong to this user or a managed
+ * profile associated with this user. It can be used to query the label, icon
+ * and badged icon for the activity.
+ */
+public class LauncherActivityInfo {
+    private static final String TAG = "LauncherActivityInfo";
+
+    private final PackageManager mPm;
+    //caopei@wind-mobi.com 2017.01.05 start
+    //fix feature 147207 Read STK name from the SIM card
+    private Context mContext;
+    //caopei@wind-mobi.com 2017.01.05 end
+    private ActivityInfo mActivityInfo;
+    private ComponentName mComponentName;
+    private UserHandle mUser;
+
+    /**
+     * Create a launchable activity object for a given ResolveInfo and user.
+     *
+     * @param context The context for fetching resources.
+     * @param info ResolveInfo from which to create the LauncherActivityInfo.
+     * @param user The UserHandle of the profile to which this activity belongs.
+     */
+    LauncherActivityInfo(Context context, ActivityInfo info, UserHandle user) {
+        this(context);
+        //caopei@wind-mobi.com 2017.01.05 start
+        //fix feature 147207 Read STK name from the SIM card
+        mContext = context;
+        //caopei@wind-mobi.com 2017.01.05 end
+        mActivityInfo = info;
+        mComponentName =  new ComponentName(info.packageName, info.name);
+        mUser = user;
+    }
+
+    LauncherActivityInfo(Context context) {
+        mPm = context.getPackageManager();
+        //caopei@wind-mobi.com 2017.01.05 start
+        //fix feature 147207 Read STK name from the SIM card
+        mContext = context;
+        //caopei@wind-mobi.com 2017.01.05 end
+    }
+
+    /**
+     * Returns the component name of this activity.
+     *
+     * @return ComponentName of the activity
+     */
+    public ComponentName getComponentName() {
+        return mComponentName;
+    }
+
+    /**
+     * Returns the user handle of the user profile that this activity belongs to. In order to
+     * persist the identity of the profile, do not store the UserHandle. Instead retrieve its
+     * serial number from UserManager. You can convert the serial number back to a UserHandle
+     * for later use.
+     *
+     * @see UserManager#getSerialNumberForUser(UserHandle)
+     * @see UserManager#getUserForSerialNumber(long)
+     *
+     * @return The UserHandle of the profile.
+     */
+    public UserHandle getUser() {
+        return mUser;
+    }
+
+    /**
+     * Retrieves the label for the activity.
+     *
+     * @return The label for the activity.
+     */
+    public CharSequence getLabel() {
+        //caopei@wind-mobi.com 2017.03.30 start
+        //fix feature 147207 Read STK name from the SIM card
+        String stkname = "";
+        ITelephony iTel =ITelephony.Stub.asInterface(ServiceManager.getService(Context.TELEPHONY_SERVICE));
+        if ("com.android.stk".equalsIgnoreCase(mComponentName.getPackageName()) && mContext != null) {
+            if(WindFeatureOptions.WIND_SHOW_STK_NAME_FROM_SIM){
+                Log.d(TAG,"getLabel()FROM_SIM old label="+mActivityInfo.loadLabel(mPm));
+                String tmptext="";
+                //is multi sim or not
+                if(WindFeatureOptions.MTK_MULTI_SIM_SUPPORT){
+                     try{
+                            if(iTel!=null&&iTel.hasIccCardUsingSlotId(0)&&!iTel.hasIccCardUsingSlotId(1)){
+                                Log.d(TAG," getLabel hasIccCard(0):"+iTel.hasIccCardUsingSlotId(0));
+                                String propOne=SystemProperties.get("gsm.ril.sst.mccmnc","");
+                                String mccMncOne="".equals(propOne)?getTelephonyProperty(0,TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, ""):propOne;
+                                if(!"".equals(ApplicationPackageManager.getSimCard(mccMncOne))){
+                                     tmptext =ApplicationPackageManager.getSimCard(mccMncOne);
+                                 }else{
+                                    tmptext=SystemProperties.get(TelephonyProperties.PROPERTY_STKAPP_NAME,"");
+                                }
+                            }else if(iTel!=null&&iTel.hasIccCardUsingSlotId(1)&&!iTel.hasIccCardUsingSlotId(0)){
+                                Log.d(TAG," getLabel hasIccCard(1):"+iTel.hasIccCardUsingSlotId(1));
+                                String propTwo=SystemProperties.get("gsm.ril.sst.mccmnc.2","");
+                                String mccMncTwo="".equals(propTwo)?getTelephonyProperty(1,TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, ""):propTwo;
+                                if(!"".equals(ApplicationPackageManager.getSimCard(mccMncTwo))){
+                                     tmptext =ApplicationPackageManager.getSimCard(mccMncTwo);
+                                 }else{
+                                    tmptext=SystemProperties.get(TelephonyProperties.PROPERTY_STKAPP_NAME_2,"");
+                                 }
+                            }else{
+                                tmptext=mActivityInfo.loadLabel(mPm).toString();//insert two sim card or no sim card ,set stk name by mtk default
+                            }
+                        }catch (RemoteException e){
+                            throw e.rethrowFromSystemServer();
+                        }
+                }else{// is one sim card
+                        String proper=SystemProperties.get("gsm.ril.sst.mccmnc","");
+                        String mccMnc="".equals(proper)?SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, ""):proper;
+                        if(!"".equals(ApplicationPackageManager.getSimCard(mccMnc))){
+                            tmptext =ApplicationPackageManager.getSimCard(mccMnc);
+                        }else{
+                            tmptext=SystemProperties.get(TelephonyProperties.PROPERTY_STKAPP_NAME,"");
+                        }
+                        Log.d(TAG," proper:"+proper+", mccMnc:"+mccMnc +", tmptext:"+tmptext);
+                }
+                Log.d(TAG,"getLabel() FROM_SIM temtext="+tmptext);
+                if(!tmptext.isEmpty()){
+                    if(!tmptext.equalsIgnoreCase("com.android.stk")){
+                        stkname=tmptext;
+                    }
+                }
+                Log.d(TAG,"getLabel() FROM_SIM stkname="+stkname);
+            }
+            Log.d(TAG,"getLabel() packageName="+mComponentName.getPackageName());
+            Log.d(TAG,"getLabel() old label="+mActivityInfo.loadLabel(mPm));
+            //fix feature 149175 default stk name overlay
+            Log.d(TAG,"getLabel() final stkname="+stkname);
+            return !TextUtils.isEmpty(stkname) ? stkname : mActivityInfo.loadLabel(mPm);
+        }
+        //caopei@wind-mobi.com 2017.03.30 end
+        return mActivityInfo.loadLabel(mPm);
+    }
+        //caopei@wind-mobi.com 2017.03.30 start
+    private String getTelephonyProperty(int phoneId, String property, String defaultVal) {
+        String propVal = null;
+        String prop = SystemProperties.get(property);
+        Log.d(TAG, "getTelephonyProperty prop value= " + prop);
+        if ((prop != null) && (prop.length() > 0)) {
+            String values[] = prop.split(",");
+            if ((phoneId >= 0) && (phoneId < values.length) && (values[phoneId] != null)) {
+                propVal = values[phoneId];
+            }
+        }
+        return propVal == null ? defaultVal : propVal;
+    }
+        //caopei@wind-mobi.com 2017.03.30 end
+    /**
+     * Returns the icon for this activity, without any badging for the profile.
+     * @param density The preferred density of the icon, zero for default density. Use
+     * density DPI values from {@link DisplayMetrics}.
+     * @see #getBadgedIcon(int)
+     * @see DisplayMetrics
+     * @return The drawable associated with the activity.
+     */
+    public Drawable getIcon(int density) {
+        final int iconRes = mActivityInfo.getIconResource();
+        Drawable icon = null;
+        // Get the preferred density icon from the app's resources
+        if (density != 0 && iconRes != 0) {
+            try {
+                final Resources resources
+                        = mPm.getResourcesForApplication(mActivityInfo.applicationInfo);
+                icon = resources.getDrawableForDensity(iconRes, density);
+            } catch (NameNotFoundException | Resources.NotFoundException exc) {
+            }
+        }
+        // Get the default density icon
+        if (icon == null) {
+            icon = mActivityInfo.loadIcon(mPm);
+        }
+        return icon;
+    }
+
+    /**
+     * Returns the application flags from the ApplicationInfo of the activity.
+     *
+     * @return Application flags
+     * @hide remove before shipping
+     */
+    public int getApplicationFlags() {
+        return mActivityInfo.applicationInfo.flags;
+    }
+
+    /**
+     * Returns the application info for the appliction this activity belongs to.
+     * @return
+     */
+    public ApplicationInfo getApplicationInfo() {
+        return mActivityInfo.applicationInfo;
+    }
+
+    /**
+     * Returns the time at which the package was first installed.
+     *
+     * @return The time of installation of the package, in milliseconds.
+     */
+    public long getFirstInstallTime() {
+        try {
+            return mPm.getPackageInfo(mActivityInfo.packageName,
+                    PackageManager.GET_UNINSTALLED_PACKAGES).firstInstallTime;
+        } catch (NameNotFoundException nnfe) {
+            // Sorry, can't find package
+            return 0;
+        }
+    }
+
+    /**
+     * Returns the name for the acitivty from  android:name in the manifest.
+     * @return the name from android:name for the acitivity.
+     */
+    public String getName() {
+        return mActivityInfo.name;
+    }
+
+    /**
+     * Returns the activity icon with badging appropriate for the profile.
+     * @param density Optional density for the icon, or 0 to use the default density. Use
+     * {@link DisplayMetrics} for DPI values.
+     * @see DisplayMetrics
+     * @return A badged icon for the activity.
+     */
+    public Drawable getBadgedIcon(int density) {
+        Drawable originalIcon = getIcon(density);
+
+        if (originalIcon instanceof BitmapDrawable) {
+            return mPm.getUserBadgedIcon(originalIcon, mUser);
+        } else {
+            Log.e(TAG, "Unable to create badged icon for " + mActivityInfo);
+        }
+        return originalIcon;
+    }
+}

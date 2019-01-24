@@ -1,0 +1,11 @@
+#ifndef SRC_NODE_ANDROID_INTERFACE_H_
+#define SRC_NODE_ANDROID_INTERFACE_H_
+
+#include "node.h"
+
+namespace node {
+    //v8::Handle<v8::Value> bridgeReq(const v8::Arguments& a);
+    void bridgeReq(const v8::FunctionCallbackInfo<v8::Value>& callbackInfo);
+}
+
+#endif

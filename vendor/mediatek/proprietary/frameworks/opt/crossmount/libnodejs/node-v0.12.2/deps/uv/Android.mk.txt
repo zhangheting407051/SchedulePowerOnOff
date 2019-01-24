@@ -1,0 +1,62 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := libuv
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_CFLAGS := -DNDEBUG \
+                -DHAVE_CONFIG_H \
+                -D_GNU_SOURCE \
+                -DEV_CONFIG_H="\"ev_config_android.h\"" \
+                -DEIO_CONFIG_H="\"eio_config_android.h\"" \
+                -DEV_MULTIPLICITY=0 \
+                -D__ANDROID__ \
+                -D_LARGEFILE_SOURCE \
+                -D_FILE_OFFSET_BITS=64
+
+
+LOCAL_SRC_FILES := \
+    src/fs-poll.c \
+    src/inet.c \
+    src/threadpool.c \
+    src/uv-common.c \
+    src/version.c \
+    src/unix/android-ifaddrs.c \
+    src/unix/async.c \
+    src/unix/core.c \
+    src/unix/dl.c \
+    src/unix/fs.c \
+    src/unix/getaddrinfo.c \
+    src/unix/getnameinfo.c \
+    src/unix/loop.c \
+    src/unix/loop-watcher.c \
+    src/unix/pipe.c \
+    src/unix/poll.c \
+    src/unix/pthread-fixes.c \
+    src/unix/process.c \
+    src/unix/signal.c \
+    src/unix/stream.c \
+    src/unix/tcp.c \
+    src/unix/thread.c \
+    src/unix/timer.c \
+    src/unix/tty.c \
+    src/unix/udp.c \
+    src/unix/proctitle.c \
+    src/unix/linux-core.c \
+    src/unix/linux-inotify.c \
+    src/unix/linux-syscalls.c
+
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/src/. \
+    $(LOCAL_PATH)/src/unix/. \
+    $(LOCAL_PATH)/include/. \
+    $(LOCAL_PATH)/test/. \
+
+include $(MTK_STATIC_LIBRARY)
+
+endif

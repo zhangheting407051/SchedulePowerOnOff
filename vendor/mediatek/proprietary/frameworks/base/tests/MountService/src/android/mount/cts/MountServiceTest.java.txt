@@ -1,0 +1,871 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2010. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.mount.cts;
+
+import android.R.integer;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PackageManager.MoveCallback;
+import android.os.Environment;
+import android.os.IBinder;
+import android.os.Handler;
+import android.os.Process;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.UserHandle;
+import android.os.UserManager;
+import android.os.storage.IMountService;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
+import android.os.SystemProperties;
+import android.os.SystemClock;
+import android.test.InstrumentationTestCase;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.widget.Button;
+import android.media.MediaRouter.VolumeCallback;
+import android.net.Uri;
+import android.os.storage.DiskInfo;
+import android.os.storage.VolumeInfo;
+import android.os.storage.VolumeRecord;
+import android.os.storage.StorageEventListener;
+import com.android.internal.R;
+import com.mediatek.storage.StorageManagerEx;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MountServiceTest extends InstrumentationTestCase {
+
+    private static final String PROP_SHARED_SDCARD = "ro.mtk_shared_sdcard";
+
+    private static final String TAG = "MountServiceTest";
+    private IMountService mMountService = null;
+    private Context mContext = null;
+    private StorageManager mStorageManager = null;
+    private String mExternalSdPath = "";
+    private VolumeInfo mSDVolumeInfo = null;
+    private String mPhoneStoragePath = "";
+    private boolean isPhoneStorageExist;
+    private VolumeInfo mPhoneStorage = null;
+    private String mInitDefaultPath = "";
+    private UserManager mUserManager = null;
+    private String[] CRYPTO_TYPES = { "password", "default", "pattern", "pin" };
+
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) {
+                return;
+            }
+            if (action.equals(Intent.ACTION_MEDIA_MOUNTED)) {
+                Log.d(TAG, "mBroadcastReceiver ACTION_MEDIA_MOUNTED");
+            } else if (action.equals(Intent.ACTION_MEDIA_UNMOUNTED)) {
+                Log.d(TAG, "mBroadcastReceiver ACTION_MEDIA_UNMOUNTED");
+            } else if (action.equals(Intent.ACTION_MEDIA_SHARED)) {
+                Log.d(TAG, "mBroadcastReceiver ACTION_MEDIA_SHARED");
+            } else if (action.equals(Intent.ACTION_MEDIA_UNSHARED)) {
+                Log.d(TAG, "mBroadcastReceiver ACTION_MEDIA_UNSHARED");
+            } else if (action.equals(Intent.ACTION_MEDIA_EJECT)) {
+                Log.d(TAG, "mBroadcastReceiver ACTION_MEDIA_EJECT");
+            }
+        }
+    };
+
+    private final StorageEventListener mStorageMountListener = new StorageEventListener() {
+        @Override
+        public void onVolumeStateChanged(VolumeInfo vol, int oldState,
+                int newState) {
+            Log.d(TAG,
+                    "onVolumeStateChanged, disk : " + vol.getDiskId()
+                            + ", type : " + vol.getType() + ", state : "
+                            + vol.getState());
+        }
+    };
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        if (mContext == null) {
+            mContext = getInstrumentation().getTargetContext();
+        }
+
+        if (mStorageManager == null) {
+            mStorageManager = (StorageManager) mContext.getSystemService(Context.STORAGE_SERVICE);
+        }
+
+        IBinder service = ServiceManager.getService("mount");
+        if (service != null && mMountService == null) {
+            mMountService = IMountService.Stub.asInterface(service);
+            if (mMountService == null) {
+                Log.e(TAG, "mountService is null!");
+                fail("mountService is null!");
+            }
+        } else {
+            Log.e(TAG, "service is null!");
+            fail("service is null!");
+        }
+
+        this.mUserManager = (UserManager) mContext.getSystemService(Context.USER_SERVICE);
+        assertTrue(mUserManager != null);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        filter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+        filter.addAction(Intent.ACTION_MEDIA_SHARED);
+        filter.addAction(Intent.ACTION_MEDIA_UNSHARED);
+        filter.addAction(Intent.ACTION_MEDIA_EJECT);
+        mContext.registerReceiver(mBroadcastReceiver, filter, null, null);
+
+        mStorageManager.registerListener(mStorageMountListener);
+
+        String oldDefaultPath = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "oldDefaultPath=" + oldDefaultPath);
+        mInitDefaultPath = oldDefaultPath;
+
+        //mContext.getPackageManager().registerMoveCallback(mCallback, new Handler());
+
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        mContext.unregisterReceiver(mBroadcastReceiver);
+        mStorageManager.unregisterListener(mStorageMountListener);
+        //mContext.getPackageManager().unregisterMoveCallback(mCallback);
+        super.tearDown();
+    }
+
+    public void testAAAInitialState() {
+        StorageVolume[] storageVolumes = mStorageManager.getVolumeList();
+        assertTrue(storageVolumes != null);
+
+        for (int i = 0; i < storageVolumes.length; ++i) {
+            Log.i(TAG, "StorageVolume[" + i + "]=" + storageVolumes[i]);
+        }
+
+        final List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(final VolumeInfo vol : volumes) {
+            Log.i(TAG, "volumeInfo=" + vol);
+        }
+
+    }
+
+    public void testIsPhontStorageExist() {
+        final List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        int publicVolumeCount = 0;
+        for(final VolumeInfo vol : volumes) {
+            if (vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                publicVolumeCount++;
+            }
+        }
+        boolean isPhoneStorageExistFromStorageManager = false;
+        if (publicVolumeCount == 2) {
+            isPhoneStorageExistFromStorageManager = true;
+        }
+        mPhoneStorage = StorageManagerEx.findPhoneStorage();
+        if (mPhoneStorage != null) {
+            this.isPhoneStorageExist = true;
+            Log.i(TAG, "isPhoneStorageExist=" + isPhoneStorageExist);
+            assertTrue(isPhoneStorageExistFromStorageManager);
+            mPhoneStoragePath = mPhoneStorage.path;
+        } else {
+            this.isPhoneStorageExist = false;
+            Log.i(TAG, "isPhoneStorageExist=" + isPhoneStorageExist);
+            assertTrue(!isPhoneStorageExistFromStorageManager);
+        }
+    }
+
+    public void testIsSDExist() {
+        waitSDMounted();
+        String sdPath = StorageManagerEx.getExternalStoragePath();
+        assertTrue("can not find sd card path", !"".equals(sdPath));
+        mExternalSdPath = sdPath;
+        mSDVolumeInfo = getVolumeInfoFromPath(sdPath);
+        Log.i(TAG, "mSDVolumeInfo=" +  mSDVolumeInfo);
+        assertTrue("can not find sd card volumeInfo", mSDVolumeInfo != null);
+    }
+
+    public void testIsUserOwner() {
+        int currentUserId = UserHandle.myUserId();
+        Log.i(TAG, "currentUserId=" + currentUserId);
+        assertTrue(currentUserId == UserHandle.USER_OWNER);
+    }
+
+    public void testPhoneStorageBestDescription() {
+        testIsPhontStorageExist();
+        if (this.isPhoneStorageExist) {
+            VolumeInfo phoneStorage = StorageManagerEx.findPhoneStorage();
+            String phoneStorage_description  =
+              mStorageManager.getBestVolumeDescription(phoneStorage);
+            Log.i(TAG, "phoneStorage_description=" + phoneStorage_description);
+            assertTrue("Phone storage".equals(phoneStorage_description));
+        }
+    }
+
+    public void testSharedSdProperty() {
+        boolean isOpenSharedSd = SystemProperties.get(PROP_SHARED_SDCARD).equals("1");
+        Log.i(TAG, "isOpenSharedSd=" + isOpenSharedSd);
+        testIsPhontStorageExist();
+        if (isOpenSharedSd) {
+            assertTrue(!isPhoneStorageExist);
+        }
+    }
+
+    public void testDefaultPathSetAndGet() {
+        testIsPhontStorageExist();
+
+        String oldDefaultPath = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "oldDefaultPath=" + oldDefaultPath);
+        assertTrue(!"".equals(oldDefaultPath));
+        VolumeInfo phoneStorage = StorageManagerEx.findPhoneStorage();
+        String sdPath = StorageManagerEx.getExternalStoragePath();
+        if (isPhoneStorageExist) {
+            StorageManagerEx.setDefaultPath(phoneStorage.path);
+            String newDefaultPath = StorageManagerEx.getDefaultPath();
+            Log.i(TAG, "newDefaultPath=" + newDefaultPath);
+            assertTrue(newDefaultPath.equals(phoneStorage.path));
+        } else {
+            StorageManagerEx.setDefaultPath(sdPath);
+            String newDefaultPath = StorageManagerEx.getDefaultPath();
+            Log.i(TAG, "newDefaultPath=" + newDefaultPath);
+            assertTrue(newDefaultPath.equals(sdPath));
+        }
+
+        StorageManagerEx.setDefaultPath(oldDefaultPath);
+        String oldDefaultPath2 = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "rollback default path to " + oldDefaultPath2);
+        assertTrue(oldDefaultPath2.equals(oldDefaultPath));
+    }
+ //============================================================= new add
+    public void testWriteDefaultPath() {
+        testIsPhontStorageExist();
+        VolumeInfo phoneStorage = StorageManagerEx.findPhoneStorage();
+        String sdPath = StorageManagerEx.getExternalStoragePath();
+        if (isPhoneStorageExist) {
+            StorageManagerEx.setDefaultPath(phoneStorage.path);
+            String DefaultPath = StorageManagerEx.getDefaultPath();
+            Log.i(TAG, "DefaultPath=" + DefaultPath);
+            assertTrue(DefaultPath.equals(phoneStorage.path));
+        } else {
+            StorageManagerEx.setDefaultPath(sdPath);
+            String DefaultPath = StorageManagerEx.getDefaultPath();
+            Log.i(TAG, "DefaultPath=" + DefaultPath);
+            assertTrue(DefaultPath.equals(sdPath));
+        }
+    }
+
+    public void testReadDefaultPath() {
+        testIsPhontStorageExist();
+        String DefaultPath = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "DefaultPath=" + DefaultPath);
+        assertTrue(!"".equals(DefaultPath));
+    }
+
+    public void testGetPassword() {
+        int crypttype = -1;
+        String Password = "";
+
+        try {
+            crypttype = mMountService.getPasswordType();
+        } catch (Exception e) {
+            Log.e(TAG, "get password type fail, e=" + e);
+        }
+        if (crypttype == 0) { // password type
+            try {
+                Password = mMountService.getPassword();
+            } catch (Exception e) {
+                Log.e(TAG, "get password fail, e=" + e);
+            }
+        } else {
+            return;
+        }
+        Log.i(TAG, "get Password=" + Password);
+        assertTrue(!"".equals(Password));
+    }
+
+    public void testClearPassword() {
+        int crypttype = -1;
+        String Password = "";
+
+        try {
+            crypttype = mMountService.getPasswordType();
+        } catch (Exception e) {
+            Log.e(TAG, "get password type fail, e=" + e);
+        }
+        if (crypttype == 0) {  // password type
+            try {
+                mMountService.clearPassword();
+            } catch (Exception e) {
+                Log.e(TAG, "clear password fail, e=" + e);
+            }
+        } else {
+            return;
+        }
+        try {
+            Password = mMountService.getPassword();
+        } catch (Exception e) {
+             Log.e(TAG, "get password fail, e=" + e);
+        }
+        Log.i(TAG, "After clear, The Password=" + Password);
+        assertTrue("".equals(Password));
+    }
+
+    //public void testEncryptStorage() {
+    //    int crypttype = 0;
+    //    String Password = "123456";
+    //   int ReturnCode = -1;
+    //    try {
+    //        ReturnCode = mMountService.encryptStorage(crypttype,Password);
+    //    } catch (Exception e) {
+    //        Log.e(TAG, "encrypt Storage fail, e=" + e);
+    //    }
+    //    Log.i(TAG, "encrypt Storage with password" + Password);
+    //    assertTrue(ReturnCode == 0);
+    //}
+
+    //public void testDecryptStorage() {
+    //    String Password = "123456";
+    //    int ReturnCode = -1;
+    //    try {
+    //        ReturnCode = mMountService.decryptStorage(Password);
+    //    } catch (Exception e) {
+    //        Log.e(TAG, "decrypt Storage fail, e=" + e);
+    //    }
+    //   Log.i(TAG, "decrypt Storage with password" + Password);
+    //    assertTrue(ReturnCode == 0);
+    //}
+
+    public void testHasAdoptable() {
+        boolean isAdoptable = false;
+        isAdoptable = SystemProperties.getBoolean(StorageManager.PROP_HAS_ADOPTABLE, false);
+        if (isAdoptable) {
+            final List<DiskInfo> disks = mStorageManager.getDisks();
+            for (DiskInfo disk : disks) {
+                assertTrue(disk.isAdoptable());
+           }
+        } else {
+            return;
+        }
+   }
+
+    public void testGetVolumePaths() {
+        final String[] paths = mStorageManager.getVolumePaths();
+        if (paths != null) {
+            for (String path : paths) {
+                assertTrue(path != null);
+            }
+        } else {
+            return;
+        }
+    }
+
+    //============================================================= new add end
+
+    public void testIsUsbOtg() {
+        Log.i(TAG, "should not have usbotg when do this UT test");
+        int currentUserId = UserHandle.myUserId();
+        Log.i(TAG, "currentUserId=" + currentUserId);
+
+        final List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(final VolumeInfo vol : volumes) {
+            if (vol.getType() == VolumeInfo.TYPE_PUBLIC
+                    || vol.getType() == VolumeInfo.TYPE_EMULATED) {
+                if (vol.getPathForUser(currentUserId) != null) {
+                    String path = vol.getPathForUser(currentUserId).getAbsolutePath();
+                    boolean isUsbOtg = StorageManagerEx.isUSBOTG(path);
+                    assertTrue(!isUsbOtg);
+                }
+            }
+        }
+    }
+
+    public void testIsExternalSDCard() {
+        String sdPath = StorageManagerEx.getExternalStoragePath();
+        assertTrue("can not find sd card path", !"".equals(sdPath));
+
+        int currentUserId = UserHandle.myUserId();
+        Log.i(TAG, "currentUserId=" + currentUserId);
+
+        final List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(final VolumeInfo vol : volumes) {
+            if (vol.getType() == VolumeInfo.TYPE_PUBLIC
+                    || vol.getType() == VolumeInfo.TYPE_EMULATED) {
+                String path = vol.getPathForUser(currentUserId).getAbsolutePath();
+                boolean isExternalSDCard = StorageManagerEx.isExternalSDCard(path);
+                if (path.equals(sdPath)) {
+                    Log.i(TAG, "sdPath=" + sdPath + ", isExternalSDCard=" + isExternalSDCard);
+                    assertTrue(isExternalSDCard);
+                } else {
+                    assertTrue(!isExternalSDCard);
+                }
+            }
+        }
+    }
+
+    public void testPasswordType() {
+        int typeInde = -1;
+        try {
+            typeInde = mMountService.getPasswordType();
+        } catch (Exception e) {
+            Log.e(TAG, "excetpion when getPasswordType, e=" + e);
+            fail("failed to getPasswordType");
+        }
+
+        // type is default, that means no password
+        Log.i(TAG, "getPasswordType=" + this.CRYPTO_TYPES[typeInde]);
+        assertTrue(typeInde == 1);
+    }
+
+    public void testChangeEncryptionPassword() {
+        if (!isDeviceEncryptionEnabled()) {
+            return;
+        }
+
+        resetPasswordTypeToDefault();
+
+        int oldTypeInde = -1;
+        try {
+            oldTypeInde = mMountService.getPasswordType();
+        } catch (Exception e) {
+            Log.e(TAG, "excetpion when getPasswordType, e=" + e);
+            fail("failed to getPasswordType");
+        }
+
+        // type is default, that means no password
+        Log.i(TAG, "getPasswordType, oldTypeInde=" + this.CRYPTO_TYPES[oldTypeInde]);
+        assertTrue("default".equals(this.CRYPTO_TYPES[oldTypeInde]));
+
+        try {
+            mMountService.changeEncryptionPassword(StorageManager.CRYPT_TYPE_PASSWORD, "1234");
+        } catch (Exception e) {
+            Log.e(TAG, "excetpion when changeEncryptionPassword, e=" + e);
+            fail("failed to changeEncryptionPassword");
+        }
+
+        int newTypeInde = -1;
+        try {
+            newTypeInde = mMountService.getPasswordType();
+        } catch (Exception e) {
+            Log.e(TAG, "excetpion when getPasswordType, e=" + e);
+            fail("failed to getPasswordType");
+        }
+        Log.i(TAG, "getPasswordType, newTypeInde=" + this.CRYPTO_TYPES[newTypeInde]);
+        assertTrue("password".equals(this.CRYPTO_TYPES[newTypeInde]));
+
+        // rollback to defualt type
+        resetPasswordTypeToDefault();
+    }
+
+    public void testMountUnmountSDCardWithoutDefaultPathChange() {
+        testIsSDExist();
+        StorageManagerEx.setDefaultPath(this.mInitDefaultPath);
+        String oldDefaultPath = StorageManagerEx.getDefaultPath();
+        mStorageManager.unmount(mSDVolumeInfo.getId());
+        waitSDUnmount(mSDVolumeInfo.path);
+        String curDefaultPath = StorageManagerEx.getDefaultPath();
+        assertTrue("old default path should not change, oldDefaultPath = " + oldDefaultPath
+                + ", curDefaultPath = " + curDefaultPath, oldDefaultPath.equals(curDefaultPath));
+        mStorageManager.mount(mSDVolumeInfo.getId());
+
+        waitSDMount(mSDVolumeInfo.path);
+        curDefaultPath = StorageManagerEx.getDefaultPath();
+        assertTrue("old default path should not change, oldDefaultPath = " + oldDefaultPath
+                + ", curDefaultPath = " + curDefaultPath, oldDefaultPath.equals(curDefaultPath));
+    }
+
+    public void testMountUnmountSDCardWithDefaultPathChange() {
+        testIsSDExist();
+        StorageManagerEx.setDefaultPath(mSDVolumeInfo.path);
+        String oldDefaultPath = StorageManagerEx.getDefaultPath();
+        mStorageManager.unmount(mSDVolumeInfo.getId());
+        waitSDUnmount(mSDVolumeInfo.path);
+        String curDefaultPathAfterUnmount = StorageManagerEx.getDefaultPath();
+        assertTrue("old default path should change, oldDefaultPath = " + oldDefaultPath
+                + ", curDefaultPathAfterUnmount = " + curDefaultPathAfterUnmount,
+                !oldDefaultPath.equals(curDefaultPathAfterUnmount));
+
+        mStorageManager.mount(mSDVolumeInfo.getId());
+        waitSDMount(mSDVolumeInfo.path);
+        String curDefaultPathAfterMount = StorageManagerEx.getDefaultPath();
+        assertTrue("old default path should not change when mount sdcard again"
+                   + ", curDefaultPathAfterUnmount = "
+                   + curDefaultPathAfterUnmount + ", curDefaultPathAfterMount = "
+                   + curDefaultPathAfterMount,
+                curDefaultPathAfterUnmount.equals(curDefaultPathAfterMount));
+    }
+
+    public void testMountUnmounPhoneStorageWithoutDefaultPathChange() {
+        testIsPhontStorageExist();
+        if (this.isPhoneStorageExist) {
+            String phontStorageId = this.mPhoneStorage.getId();
+
+            StorageManagerEx.setDefaultPath(this.mInitDefaultPath);
+            String oldDefaultPath = StorageManagerEx.getDefaultPath();
+            mStorageManager.unmount(phontStorageId);
+            waitSDUnmount(phontStorageId);
+            String curDefaultPath = StorageManagerEx.getDefaultPath();
+            assertTrue("old default path should not change, oldDefaultPath = " + oldDefaultPath
+                    + ", curDefaultPath = "
+                    + curDefaultPath, oldDefaultPath.equals(curDefaultPath));
+            mStorageManager.mount(phontStorageId);
+
+            waitSDMount(phontStorageId);
+            curDefaultPath = StorageManagerEx.getDefaultPath();
+            assertTrue("old default path should not change, oldDefaultPath = " + oldDefaultPath
+                    + ", curDefaultPath = " + curDefaultPath
+                       , oldDefaultPath.equals(curDefaultPath));
+        }
+    }
+
+    public void testX1FormatSDCardAsPrivate() {
+        testIsSDExist();
+        String sdVolumeDiskId = this.mSDVolumeInfo.getDisk().getId();
+        mStorageManager.partitionPrivate(sdVolumeDiskId);
+        // wait sd mount again
+        assertTrue("timeout to mount sdcard agagin after partitionPrivate"
+                , waitForStorageStateFromDiskId(sdVolumeDiskId,
+                        VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED)));
+
+        VolumeInfo sdVolumeInfo = getVolumeInfoFromDiskId(sdVolumeDiskId);
+        Log.i(TAG, "after partitionPrivate, sdVolumeInfo=" + sdVolumeInfo);
+        assertTrue("should find sd volume when partitionPrivate", sdVolumeInfo != null);
+        assertTrue("sd volume type should be private", sdVolumeInfo.getType()
+                   == VolumeInfo.TYPE_PRIVATE);
+        assertTrue("sd volume state should be mounted", sdVolumeInfo.getState()
+                   == VolumeInfo.STATE_MOUNTED);
+
+    }
+
+    public void testX2FormatSDCardAsPublic() {
+        VolumeInfo sdVolume = getPrivateSDVolumeInfo();
+        String sdVolumeDiskId = sdVolume.getDisk().getId();
+        mStorageManager.partitionPublic(sdVolumeDiskId);
+        if (sdVolume.getFsUuid() != null) {
+            try {
+                this.mMountService.forgetVolume(sdVolume.getFsUuid());
+            } catch (Exception e) {
+                Log.i(TAG, "exception happens when forgetVolume, e = " + e);
+            }
+        }
+
+        // wait sd mount again
+        assertTrue("timeout to mount sdcard agagin after partitionPublic"
+                , waitForStorageStateFromDiskId(sdVolumeDiskId,
+                        VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED)));
+
+        VolumeInfo sdVolumeInfo = getVolumeInfoFromDiskId(sdVolumeDiskId);
+        Log.i(TAG, "after partitionPublic, sdVolumeInfo=" + sdVolumeInfo);
+        assertTrue("should find sd volume when partitionPublic", sdVolumeInfo != null);
+        assertTrue("sd volume type should be public", sdVolumeInfo.getType()
+                   == VolumeInfo.TYPE_PUBLIC);
+        assertTrue("sd volume state should be mounted", sdVolumeInfo.getState()
+                   == VolumeInfo.STATE_MOUNTED);
+    }
+
+//    public void testX3FormatSDCardAsPrivateAndMigrateData() {
+//        testIsSDExist();
+//        String sdVolumeDiskId = this.mSDVolumeInfo.getDisk().getId();
+//        mStorageManager.partitionPrivate(sdVolumeDiskId);
+//        // wait sd mount again
+//        assertTrue("timeout to mount sdcard agagin after partitionPrivate"
+//                , waitForStorageStateFromDiskId(sdVolumeDiskId,
+//                        VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED)));
+//
+//        VolumeInfo sdVolumeInfo = getVolumeInfoFromDiskId(sdVolumeDiskId);
+//        Log.i(TAG, "after partitionPrivate, sdVolumeInfo=" + sdVolumeInfo);
+//        assertTrue("should find sd volume when partitionPrivate", sdVolumeInfo != null);
+//        assertTrue("sd volume type should be private", sdVolumeInfo.getType()
+//             == VolumeInfo.TYPE_PRIVATE);
+//        assertTrue("sd volume state should be mounted", sdVolumeInfo.getState()
+//             == VolumeInfo.STATE_MOUNTED);
+//
+//        //migrate data
+//        try {
+//            final int moveId = mContext.getPackageManager().movePrimaryStorage(sdVolumeInfo);
+//            mCallback.onStatusChanged(moveId
+//                  , mContext.getPackageManager().getMoveStatus(moveId), -1);
+//        } catch (Exception e) {
+//            Log.i(TAG, "migrate data error e=" + e);
+//        }
+//    }
+
+//    public void testX4FormatSDCardAsPublicAfterMigrateData() {
+//        String sdVolumeDiskId = "";
+//        VolumeInfo sdVolume = null;
+//        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+//        for(VolumeInfo vol : volumes) {
+//            if (vol.getType() == VolumeInfo.TYPE_PRIVATE && vol.getState()
+//                 == VolumeInfo.STATE_MOUNTED) {
+//                sdVolumeDiskId = vol.getDisk().getId();
+//                sdVolume = vol;
+//                break;
+//            }
+//        }
+//        assertTrue("can not find private sdVolumeDiskId", !sdVolumeDiskId.equals(""));
+//        Log.i(TAG, "after migrate data, sdVolumeInfo=" + sdVolume);
+//        Log.i(TAG, "after migrate data, sdVolumeDiskId=" + sdVolumeDiskId);
+//
+//        mStorageManager.partitionPublic(sdVolumeDiskId);
+//
+//        if (sdVolume.getFsUuid() != null) {
+//            try {
+//                this.mMountService.forgetVolume(sdVolume.getFsUuid());
+//            } catch (Exception e) {
+//                Log.i(TAG, "exception happens when forgetVolume, e = " + e);
+//            }
+//        }
+//
+//        // wait sd mount again
+//        assertTrue("timeout to mount sdcard agagin after partitionPublic"
+//                , waitForStorageStateFromDiskId(sdVolumeDiskId,
+//                        VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED)));
+//
+//        VolumeInfo sdVolumeInfo = getVolumeInfoFromDiskId(sdVolumeDiskId);
+//        Log.i(TAG, "after partitionPublic, sdVolumeInfo=" + sdVolumeInfo);
+//        assertTrue("should find sd volume when partitionPublic", sdVolumeInfo != null);
+//        assertTrue("sd volume type should be public", sdVolumeInfo.getType()
+//             == VolumeInfo.TYPE_PUBLIC);
+//        assertTrue("sd volume state should be mounted", sdVolumeInfo.getState()
+//             == VolumeInfo.STATE_MOUNTED);
+//    }
+
+    public void testYForgetAllVolume() {
+        try {
+            this.mMountService.forgetAllVolumes();
+        } catch (Exception e) {
+            Log.i(TAG, "exception happens when forgetVolume, e = " + e);
+        }
+
+        waitSDMounted();
+    }
+
+    public void testFormatPhoneStorage() {
+        testIsPhontStorageExist();
+        if (this.isPhoneStorageExist) {
+            String phontStorageId = this.mPhoneStorage.getDisk().getId();
+            mStorageManager.partitionPublic(phontStorageId);
+            waitSDMount(phontStorageId);
+
+            VolumeInfo phoneStorage = StorageManagerEx.findPhoneStorage();
+            assertTrue("phone storage type should be public", phoneStorage.getType()
+                       == VolumeInfo.TYPE_PUBLIC);
+            assertTrue("phone state should be mounted", phoneStorage.getState()
+                       == VolumeInfo.STATE_MOUNTED);
+        }
+    }
+
+    public void testUMSEnabledAndDisable() {
+        boolean isUMSEnabled = mStorageManager.isUsbMassStorageEnabled();
+        assertTrue("default disable UMS", !isUMSEnabled);
+
+        mStorageManager.enableUsbMassStorage();
+        isUMSEnabled = mStorageManager.isUsbMassStorageEnabled();
+        assertTrue("enable UMS fail", isUMSEnabled);
+
+        SystemClock.sleep(5000);
+        mStorageManager.disableUsbMassStorage();
+        isUMSEnabled = mStorageManager.isUsbMassStorageEnabled();
+        assertTrue("disable UMS fail", !isUMSEnabled);
+    }
+
+    public void testEnabledUMSWithDefaultPathChange() {
+        testIsSDExist();
+        Log.i(TAG, "mExternalSdPath=" + mExternalSdPath);
+        StorageManagerEx.setDefaultPath(mExternalSdPath);
+
+        mStorageManager.enableUsbMassStorage();
+        boolean isUMSEnabled = mStorageManager.isUsbMassStorageEnabled();
+        assertTrue("enable UMS fail", isUMSEnabled);
+        String newDefaultPath = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "after enable UMS newDefaultPath=" + newDefaultPath);
+        assertTrue("default path should auto swtich when turn on UMS"
+                , !newDefaultPath.equals(mExternalSdPath));
+
+        SystemClock.sleep(5000);
+        mStorageManager.disableUsbMassStorage();
+        isUMSEnabled = mStorageManager.isUsbMassStorageEnabled();
+        assertTrue("disable UMS fail", !isUMSEnabled);
+        String newDefaultPath2 = StorageManagerEx.getDefaultPath();
+        Log.i(TAG, "after disable UMS newDefaultPath2=" + newDefaultPath2);
+        assertTrue("default path should not change when turn off UMS"
+                , newDefaultPath2.equals(newDefaultPath));
+    }
+
+    //=============================================================
+    private boolean isDeviceEncryptionEnabled() {
+        final String status = SystemProperties.get("ro.crypto.state", "unsupported");
+         return "encrypted".equalsIgnoreCase(status);
+    }
+
+    private void resetPasswordTypeToDefault() {
+        try {
+            Log.i(TAG, "rollback to defualt type");
+            mMountService.changeEncryptionPassword(StorageManager.CRYPT_TYPE_DEFAULT, null);
+        } catch (Exception e) {
+            Log.e(TAG, "excetpion when rollbackPasswordType, e=" + e);
+            fail("failed to rollback Password");
+        }
+    }
+
+    private VolumeInfo getVolumeInfoFromPath(String volPath) {
+        VolumeInfo result = null;
+        int currentUserId = UserHandle.myUserId();
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(VolumeInfo vol : volumes) {
+            if (vol.getType() == VolumeInfo.TYPE_PUBLIC) {
+                String path = vol.getPathForUser(currentUserId).getAbsolutePath();
+                if (path.equals(volPath)) {
+                    result = vol;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    private VolumeInfo getVolumeInfoFromDiskId(String diskId) {
+        assertTrue("diskId should not null", diskId != null);
+        VolumeInfo result = null;
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(VolumeInfo vol : volumes) {
+            if (vol.getDisk() != null && diskId.equals(vol.getDisk().getId())) {
+                result = vol;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private void waitSDUnmount(String sdPath) {
+        boolean result =
+          waitForStorageState(sdPath
+                              , VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_UNMOUNTED));
+        assertTrue(result);
+        SystemClock.sleep(2000);
+    }
+
+    private void waitSDMount(String sdPath) {
+        boolean result =
+          waitForStorageState(sdPath
+                              , VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED));
+        assertTrue(result);
+        SystemClock.sleep(2000);
+    }
+
+    private void waitSDMounted() {
+        Log.i(TAG, "waitSDMounted");
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(VolumeInfo vol : volumes) {
+            if (vol.getType() != VolumeInfo.TYPE_PUBLIC
+                    || vol.getType() != VolumeInfo.TYPE_PRIVATE) {
+                continue;
+            }
+            if (vol.getState() != VolumeInfo.STATE_MOUNTED && vol.getDisk() != null) {
+                String sdVolumeDiskId = vol.getDisk().getId();
+                Log.i(TAG, "waitSDMounted, sdVolumeDiskId=" + sdVolumeDiskId);
+                Log.i(TAG, "waitSDMounted, vol.getState()="
+                      + VolumeInfo.getEnvironmentForState(vol.getState()));
+                waitForStorageStateFromDiskId(sdVolumeDiskId,
+                        VolumeInfo.getEnvironmentForState(VolumeInfo.STATE_MOUNTED));
+            }
+        }
+    }
+
+    private boolean waitForStorageState(String path, String targetState) {
+        int retries = 30;
+        String state = mStorageManager.getVolumeState(path);
+        while (state != null && !state.equals(targetState) && (retries-- >= 0)) {
+            SystemClock.sleep(2000);
+            state = mStorageManager.getVolumeState(path);
+        }
+
+        return targetState.equals(state);
+    }
+
+    private boolean waitForStorageStateFromDiskId(String diskId, String targetState) {
+        int retries = 30;
+        VolumeInfo volume = getVolumeInfoFromDiskId(diskId);
+        assertTrue("cannot get volume from diskID, diskId = " + diskId, volume != null);
+        String state = VolumeInfo.getEnvironmentForState(volume.getState());
+        while (state != null && !state.equals(targetState) && (retries-- >= 0)) {
+            SystemClock.sleep(2000);
+            volume = getVolumeInfoFromDiskId(diskId);
+            assertTrue("cannot get volume from diskID, diskId = " + diskId, volume != null);
+            state = VolumeInfo.getEnvironmentForState(volume.getState());
+        }
+
+        return targetState.equals(state);
+    }
+
+    private VolumeInfo getPrivateSDVolumeInfo() {
+        VolumeInfo result = null;
+        List<VolumeInfo> volumes = mStorageManager.getVolumes();
+        for(VolumeInfo vol : volumes) {
+            if (vol.getDisk() != null
+                    && vol.getDisk().getId() != null
+                    && vol.getType() == VolumeInfo.TYPE_PRIVATE) {
+                result = vol;
+                break;
+            }
+        }
+        return result;
+    }
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="month_day_year">%B %-e, %Y</string>
+    <string name="time_of_day">%-l:%M:%S %p</string>
+    <string name="date_and_time">%b %-e, %Y, %-l:%M:%S %p</string>
+    <string name="date_time">%1$s, %2$s</string>
+
+    <!-- liuyangyao@wind-mobi.com add 2017/4/4 begin -->
+    <string name="numeric_date_format">yyyy-MM-dd</string>
+    <string name="numeric_date_template">"%s/%s/%s"</string>
+    <!-- liuyangyao@wind-mobi.com add 2017/4/4 end -->
+</resources>

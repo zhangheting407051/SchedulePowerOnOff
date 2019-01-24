@@ -1,0 +1,27 @@
+LOCAL_PATH:= $(call my-dir)
+include $(CLEAR_VARS)
+
+# Only build program binaries when USE_OPENGL_RENDERER is
+# defined in the current device/board configuration
+ifeq ($(USE_OPENGL_RENDERER),true)
+  LOCAL_SRC_FILES:= \
+    main_programbinaryserver.cpp
+
+	intermediates := $(call intermediates-dir-for,STATIC_LIBRARIES,TARGET,)
+
+	LOCAL_C_INCLUDES += \
+    $(LOCAL_PATH)/../core \
+    system/core/include
+
+  LOCAL_CFLAGS := -DUSE_OPENGL_RENDERER
+  LOCAL_SHARED_LIBRARIES := libutils libbinder liblog libprogrambinary libcutils
+  LOCAL_MODULE := program_binary_service
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+  LOCAL_MODULE_TAGS := optional
+
+  # Defaults for ATRACE_TAG and LOG_TAG for programbinary
+  LOCAL_CFLAGS += -DLOG_TAG=\"ProgramBinary\/Server\"
+
+  include $(BUILD_EXECUTABLE)
+endif

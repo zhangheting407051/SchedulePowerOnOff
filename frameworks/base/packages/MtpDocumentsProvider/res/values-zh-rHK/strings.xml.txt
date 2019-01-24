@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP 主機</string>
+    <string name="downloads_app_label">下載</string>
+    <string name="root_name"><xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g> <xliff:g example="Internal Storage" id="storage_name">%2$s</xliff:g></string>
+    <string name="accessing_notification_title">從 <xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g> 存取檔案</string>
+    <string name="error_busy_device">另一個裝置忙碌中。在其可供使用之前，您無法傳輸檔案。</string>
+    <string name="error_locked_device">找不到任何檔案。另一裝置可能遭到鎖定。在這種情況下，請進行解鎖並再試一次。</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

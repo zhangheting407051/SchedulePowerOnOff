@@ -1,0 +1,71 @@
+// liuyangyao@wind-mobi.com 2016/11/15 start
+//add FeatureOptions API
+package android.options.wind;
+
+import android.os.SystemProperties;
+
+public class WindFeatureOptions {
+
+    public static final boolean WIND_DEF_PRO_A158 = SystemProperties.get("ro.wind_def_pro_a158").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_EMEAD = SystemProperties.get("ro.wind_def_optr_a158_emead").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_EMEAD_1RAM = SystemProperties.get("ro.wind_def_optr_a158_emead1g").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_EMEAS = SystemProperties.get("ro.wind_def_optr_a158_emeas").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_APD = SystemProperties.get("ro.wind_def_optr_a158_apd").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_LAD = SystemProperties.get("ro.wind_def_optr_a158_lad").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_LAS = SystemProperties.get("ro.wind_def_optr_a158_las").equals("1");
+    public static final boolean WIND_DEF_OPTR_A158_LBD = SystemProperties.get("ro.wind_def_optr_a158_lbd").equals("1");
+	public static final boolean WIND_DEF_OPTR_A158_LBD_PA = SystemProperties.get("ro.wind_def_optr_a158_lbd_pa").equals("1");
+    public static final boolean WIND_COUNTRY_CODE_SUPPORT = SystemProperties.get("ro.wind_country_code_support").equals("1");
+    public static final boolean WIND_DEF_MIRROR_SUPPORT = SystemProperties.get("ro.wind_def_mirror_support").equals("1");
+
+    // liuyangyao@wind-mobi.com add for dateformat 2016/12/5 begin
+    // fix Feature #133770 : date, time and timezone
+    public static final boolean WIND_TIMEFORMAT_IS_24 = SystemProperties.get("ro.wind_timeformat_is_24").equals("1");
+    public static final boolean WIND_TIMEFORMAT_IS_12 = SystemProperties.get("ro.wind_timeformat_is_12").equals("1");
+    public static final String WIND_SETTINGS_DATEFORMAT = SystemProperties.get("ro.setting.dateformat");
+
+    // fix Feature #133625 : Wifi direct name and Wifi hotpspot name
+    public static final boolean WIND_CONFIG_WIFI_NAME = SystemProperties.get("ro.wind_config_wifi_name").equals("1");
+    // liuyangyao@wind-mobi.com add for dateformat 2016/12/5 begin
+
+    //qidongdong@wind-mobi.com 201601212 start
+    //add for sar sensor
+    public static final boolean WIND_SAR_SENSOR_ADD = SystemProperties.get("ro.wind_sar_sensor_test").equals("1");
+    //qidongdong@wind-mobi.com 201601212 end
+    //caopei@wind-mobi 2017.01.05 start
+    // fix Feature 145865
+    public static final boolean WIND_DEF_SIGNAL_STRENGTH_FIVE=SystemProperties.get("ro.wind_def_signal_five").equals("1");
+    public static final boolean WIND_SHOW_STK_NAME_FROM_SIM = SystemProperties.get("ro.wind_show_stk_name_from_sim").equals("1");
+    public static final String WIND_DEFAULT_STK_NAME = SystemProperties.get("ro.wind_default_stk_name");
+    public static final boolean MTK_MULTI_SIM_SUPPORT = SystemProperties.get("persist.radio.multisim.config").equals("dsds");
+    //caopei@wind-mobi 2017.01.05 end
+    //chusuxia@wind-mobi.com 20161227 start
+    //add for SIMLOCK
+    public static final boolean WIND_DEF_SML_SUPPORT = SystemProperties.get("ro.wind_def_sml_support").equals("1");
+    public static final String WIND_UNLOCK_DIGITS = SystemProperties.get("ro.wind_unlock_digits");
+    public static final boolean WIND_DEF_SML_DUALSIM = SystemProperties.get("ro.wind_def_sml_dualsim").equals("1");
+    //chusuxia@wind-mobi.com 20161227 end
+    //keenhui@wind-mobi.com modify for bug 146352 2017-1-5 begin
+    public static final boolean WIND_DISABLE_SD_DIALOG = SystemProperties.get("ro.wind_disable_sddialog").equals("1");
+    //keenhui@wind-mobi.com modify for bug 146352 2017-1-5 end
+    //hanweiwei@wind-mobi.com add 2017.03.07 start
+    public static final boolean WIND_DEF_SDN_ON = SystemProperties.get("ro.wind_def_sdn_on").equals("1");
+    public static final boolean WIND_DEF_LAUNCHER_PHONE_ASSIST = SystemProperties.get("ro.wind_def_launcher_phone").equals("1");
+    public static final boolean WIND_DEF_CONFIG_LOW_RAM = SystemProperties.get("ro.config.low_ram").equals("1");
+    //hanweiwei@wind-mobi.com add 2017.03.07 end
+    //zhangheting@wind-mobi.com add 20170308 start
+    public static final boolean WIND_LBD_FACTORY_VERSION = SystemProperties.get("ro.wind_lbd_factory_version").equals("1");
+    //zhangheting@wind-mobi.com add 20170308 end
+    //zhangheting@wind-mobi.com 20170310 start
+    //add for user adb
+    public static final boolean WIND_DEF_ENABLE_ADB_USER_BUILD = SystemProperties.get("ro.wind.enable_adb_user_build").equals("1");
+    //zhangheting@wind-mobi.com 20170310 end
+    //liuxiaoshuan@wind-mobi.com 20170316 start
+    public static final boolean WIND_DEF_LANGUAGE_FROMSIM = SystemProperties.get("ro.wind_def_language_fromsim").equals("1");
+    //liuxiaoshuan@wind-mobi.com 20170316 end
+    //shiliming@wind-mobi.com 20170324 begin
+    /** @hide */
+    public static final boolean WIND_DEFAULT_APN_DELETABLE = SystemProperties.get("ro.wind_default_apn_deletable").equals("1");
+    //shiliming@wind-mobi.com 20170324 end
+}
+// liuyangyao@wind-mobi.com 2016/11/15 end

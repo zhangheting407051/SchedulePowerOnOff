@@ -1,0 +1,85 @@
+package com.mediatek.build {
+
+  public final class SdkVersion {
+    method public static int getPlatformVersionEx();
+  }
+
+}
+
+package com.mediatek.runningbooster {
+
+  public class RbConfiguration implements android.os.Parcelable {
+    ctor public RbConfiguration();
+    ctor public RbConfiguration(android.os.Parcel);
+    method public int describeContents();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final android.os.Parcelable.Creator<com.mediatek.runningbooster.RbConfiguration> CREATOR;
+    field public static final com.mediatek.runningbooster.RbConfiguration.SuppressionPoint DEAULT_STARTPOINT;
+    field public static final int DEFAULT_KEEP_NOTIFICATION_APP_NUMBER = -1; // 0xffffffff
+    field public static final int DEFAULT_KEEP_RECENT_TASK_NUMBER = 3; // 0x3
+    field public static final java.lang.String INITIAL = "initial";
+    field public static final int INVALIDE_VALUE = -1000; // 0xfffffc18
+    field public static final int INVALID_STATE = -1; // 0xffffffff
+    field public static final int MAX_KEEP_RECENT_TASK_NUMBER = 10; // 0xa
+    field public static final int MIN_KEEP_NOTIFICATION_APP_NUMBER = 3; // 0x3
+    field public static final int MIN_KEEP_RECENT_APP_NUMBER = 1; // 0x1
+    field public int adj;
+    field public java.util.ArrayList<java.lang.String> blackList;
+    field public boolean checkLocationServiceApp;
+    field public boolean enableLauncherWidget;
+    field public boolean enableRunningBooster;
+    field public int keepNotificationAPPNumber;
+    field public int keepRecentTaskNumner;
+    field public int[] suppressAppStatus;
+    field public java.util.ArrayList<java.lang.String> suppressPkg;
+    field public java.util.ArrayList<com.mediatek.runningbooster.RbConfiguration.SuppressionPoint> suppressPoint;
+    field public int suppressPointListSize;
+    field public java.util.ArrayList<java.lang.String> whiteList;
+  }
+
+  public static final class RbConfiguration.AdjValue extends java.lang.Enum {
+    method public int getAdjValue();
+    method public static com.mediatek.runningbooster.RbConfiguration.AdjValue valueOf(java.lang.String);
+    method public static final com.mediatek.runningbooster.RbConfiguration.AdjValue[] values();
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue BackupAppAdj;
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue HeavyWeightAppAdj;
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue HomeAppAdj;
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue PerceptibleAppAdj;
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue PreviousAppAdj;
+    enum_constant public static final com.mediatek.runningbooster.RbConfiguration.AdjValue ServiceAdj;
+  }
+
+  public static class RbConfiguration.PolicyList {
+    ctor public RbConfiguration.PolicyList();
+    ctor public RbConfiguration.PolicyList(int, int, java.lang.String, boolean, com.mediatek.runningbooster.RbConfiguration);
+    field public com.mediatek.runningbooster.RbConfiguration mConfig;
+    field public boolean mForceStopState;
+    field public java.lang.String mPackageName;
+    field public int mUid;
+    field public int mUserId;
+  }
+
+  public static class RbConfiguration.SuppressionPoint {
+    ctor public RbConfiguration.SuppressionPoint();
+    ctor public RbConfiguration.SuppressionPoint(java.lang.String, int);
+    method public boolean equal(com.mediatek.runningbooster.RbConfiguration.SuppressionPoint);
+    field public static final int APP_PAUSE = 0; // 0x0
+    field public static final int APP_RESUME = 1; // 0x1
+    field public static final java.lang.String HOME = "launcher";
+    field public static final java.lang.String RECENT_APP = "recentAPP";
+    field public int mAppState;
+    field public com.mediatek.runningbooster.RbConfiguration mConfig;
+    field public java.lang.String mPackageName;
+    field public boolean mSuppressState;
+    field public java.lang.String mSuppressTag;
+  }
+
+  public class RunningBoosterManager {
+    ctor public RunningBoosterManager(android.content.Context);
+    method public void applyUserConfig(java.lang.String, com.mediatek.runningbooster.RbConfiguration) throws java.lang.SecurityException;
+    method public java.lang.String getAPIVersion() throws java.lang.SecurityException;
+    method public java.util.List<java.lang.String> getPlatformWhiteList() throws java.lang.SecurityException;
+  }
+
+}
+

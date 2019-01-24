@@ -1,0 +1,302 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2010. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+#include "BuildProgram.h"
+#include "IProgramBinaryService.h"
+#include "ProgramBinaryData.h"
+
+#include <utils/Log.h>
+#include <utils/CallStack.h>
+#include <utils/Errors.h>
+
+#include <binder/IPCThreadState.h>
+#include <binder/ProcessState.h>
+#include <binder/IServiceManager.h>
+
+#ifdef USE_OPENGL_RENDERER
+// Used for EGL and GLES
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+// Used to cache program binaries
+#include "mediatek/MTKProgramAtlas.h"
+#include <cutils/ashmem.h>
+#include <sys/mman.h>
+#endif
+
+using namespace android;
+
+#define BOOLRESULT_TO_STR(b) ((b)?"Successful":"Failed")
+
+
+BuildProgram::BuildProgram()
+        : mProgramFd(-1)
+        , mProgramBinaryLength(0)
+        , mProgramMapArrayLen(0)
+        , mProgramMap(NULL) {
+    ALOGI("Build program consctruct.");
+}
+
+BuildProgram::~BuildProgram() {
+    ALOGI("Build program desctruct.");
+    destroy();
+}
+
+void BuildProgram::destroy() {
+    if (mProgramFd >= 0) {
+        close(mProgramFd);
+        mProgramFd = -1;
+    }
+
+    mProgramBinaryLength = 0;
+    mProgramMapArrayLen = 0;
+
+    if (mProgramMap) {
+        delete mProgramMap;
+        mProgramMap = NULL;
+    }
+}
+
+#ifdef USE_OPENGL_RENDERER
+#define CLEANUP_GL_AND_RETURN(result) \
+    if (fence != EGL_NO_SYNC_KHR) eglDestroySyncKHR(display, fence); \
+    if (image) eglDestroyImageKHR(display, image); \
+    if (texture) glDeleteTextures(1, &texture); \
+    if (surface != EGL_NO_SURFACE) eglDestroySurface(display, surface); \
+    if (context != EGL_NO_CONTEXT) eglDestroyContext(display, context); \
+    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT); \
+    eglReleaseThread(); \
+    eglTerminate(display); \
+    return result;
+
+#define CLEANUP_GL_MEMORY_AND_RETURN(result) \
+    if (needDelete) programAtlas.loadProgramBinariesAndDelete(map, mapArrayLength, binaryBuffer, memoryLength); \
+    if (fd >= 0) close(fd); \
+    delete map; \
+    CLEANUP_GL_AND_RETURN(result);
+#endif
+
+bool BuildProgram:: buildProgramBinary() {
+#ifdef USE_OPENGL_RENDERER
+    // Setup egl enviroment and build program binaries to cache
+    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    if (display == EGL_NO_DISPLAY) return false;
+
+    EGLint major;
+    EGLint minor;
+    if (!eglInitialize(display, &major, &minor)) {
+        ALOGW("Could not initialize EGL");
+        return false;
+    }
+
+    // Display current egl version
+    ALOGI("EGL version %d.%d", major, minor);
+
+    // We're going to use a 1x1 pbuffer surface later on
+    // The configuration doesn't really matter for what we're trying to do
+    EGLint configAttrs[] = {
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_RED_SIZE, 8,
+            EGL_GREEN_SIZE, 8,
+            EGL_BLUE_SIZE, 8,
+            EGL_ALPHA_SIZE, 0,
+            EGL_DEPTH_SIZE, 0,
+            EGL_STENCIL_SIZE, 0,
+            EGL_NONE
+    };
+    EGLConfig configs[1];
+    EGLint configCount;
+    if (!eglChooseConfig(display, configAttrs, configs, 1, &configCount)) {
+        ALOGW("Could not select EGL configuration");
+        eglReleaseThread();
+        eglTerminate(display);
+        return false;
+    }
+    if (configCount <= 0) {
+        ALOGW("Could not find EGL configuration");
+        eglReleaseThread();
+        eglTerminate(display);
+        return false;
+    }
+
+    // These objects are initialized below but the default "null"
+    // values are used to cleanup properly at any point in the
+    // initialization sequence
+    GLuint texture = 0;
+    EGLImageKHR image = EGL_NO_IMAGE_KHR;
+    EGLSurface surface = EGL_NO_SURFACE;
+    EGLSyncKHR fence = EGL_NO_SYNC_KHR;
+
+    EGLint attrs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    EGLContext context = eglCreateContext(display, configs[0], EGL_NO_CONTEXT, attrs);
+    if (context == EGL_NO_CONTEXT) {
+        ALOGW("Could not create EGL context");
+        CLEANUP_GL_AND_RETURN(false);
+    }
+
+    // Create the 1x1 pbuffer
+    EGLint surfaceAttrs[] = { EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE };
+    surface = eglCreatePbufferSurface(display, configs[0], surfaceAttrs);
+    if (surface == EGL_NO_SURFACE) {
+        ALOGW("Could not create EGL surface");
+        CLEANUP_GL_AND_RETURN(false);
+    }
+
+    if (!eglMakeCurrent(display, surface, surface, context)) {
+        ALOGW("Could not change current EGL context");
+        CLEANUP_GL_AND_RETURN(false);
+    }
+
+    uirenderer::ProgramAtlas programAtlas;
+    // Default value, will be changed based on real cached program count.
+    int mapArrayLength = 50*PROGRAM_MAP_ENTRY_FIELD_COUNT;
+    // Program map
+    int64_t* map = new int64_t[mapArrayLength];
+    // Binary length for all cached program
+    int memoryLength = programAtlas.createPrograms(map, &mapArrayLength);
+    // Binary buffer for containing program binaries
+    void* binaryBuffer = NULL;
+    // File descriptor
+    int fd = -1;
+    // Flag for whether to load program binaries to the buffer, delete programs, and update the map.
+    bool needDelete = true;
+
+    if (memoryLength == 0) {
+        CLEANUP_GL_MEMORY_AND_RETURN(false);
+    }
+
+    // Allocate memory from ashmem for sharing.
+    fd = ashmem_create_region("ProgramBinaryService", memoryLength);
+    if (fd < 0) {
+        ALOGE("ashmem_create_region failed!");
+        CallStack stack(LOG_TAG);
+        CLEANUP_GL_MEMORY_AND_RETURN(false);
+    }
+
+    // mmap the shared memory to this process and start to cache program binaries in the buffer.
+    binaryBuffer = (void*)mmap(NULL, memoryLength, PROT_WRITE, MAP_SHARED, fd, 0);
+    if (!binaryBuffer) {
+        ALOGE("mmap failed!");
+        CallStack stack(LOG_TAG);
+        CLEANUP_GL_MEMORY_AND_RETURN(false);
+    } else {
+        programAtlas.loadProgramBinariesAndDelete(map, mapArrayLength, binaryBuffer, memoryLength);
+        needDelete = false;
+
+        // Show program information
+        for (int i = 0; i < mapArrayLength;) {
+            int64_t key = static_cast<int64_t>(map[i++]);
+            int binaryOffset = map[i];
+            void* offset = reinterpret_cast<void*>(map[i++]);
+            int length = static_cast<int>(map[i++]);
+            int format = static_cast<int>(map[i++]);
+
+            void* binaryContent = reinterpret_cast<void*>(reinterpret_cast<int64_t>(binaryBuffer) + binaryOffset);
+            char* ubinary = static_cast<char*>(binaryContent);
+
+            ALOGI("ProgramEntry #%2d: key 0x%.8x%.8x, offset %6d, binaryLength %4d, format %d --> "
+                    "0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x",
+                    i/4-1, uint32_t(key >> 32), uint32_t(key & 0xffffffff), (int)((long)offset),
+                    length, format, ubinary[0], ubinary[1], ubinary[2], ubinary[3], ubinary[4],
+                    ubinary[5], ubinary[6], ubinary[7], ubinary[8], ubinary[9]);
+        }
+
+        // munmap
+        int result = munmap(binaryBuffer, memoryLength);
+        if (result < 0) {
+            ALOGE("munmap failed!");
+            CallStack stack(LOG_TAG);
+            CLEANUP_GL_MEMORY_AND_RETURN(false);
+        } else {
+            // Everything is good.
+            // Set value, clean up and return.
+            ALOGI("Build program succeeded.");
+
+            mProgramFd = fd;
+            mProgramMap = map;
+            mProgramBinaryLength = memoryLength;
+            mProgramMapArrayLen = mapArrayLength;
+
+            CLEANUP_GL_AND_RETURN(true);
+        }
+    }
+#endif
+
+    return false;
+}
+
+bool BuildProgram::sendResult() {
+    /// Get program binary service and send result to server
+    sp<android::IServiceManager> sm = defaultServiceManager();
+    sp<android::IBinder> binder;
+    sp<IProgramBinaryService> pbs;
+
+    for (int n = 0; n < 5; n++) {
+        binder = sm->checkService(String16(PROGRAM_BINARY_NAME));
+        if (binder != NULL) break;
+        ALOGD("Waiting for Program binary service...");
+        usleep(100000);
+    }
+
+    if (binder == NULL) {
+        ALOGW("Program binary service is not published, failed to send program binary.");
+        return false;
+    }
+
+    // Send program binaries and related information to server
+    ALOGI("Build program result is sending to server...");
+    pbs = interface_cast<IProgramBinaryService>(binder);
+    ProgramBinaryData* pbData = new ProgramBinaryData();
+    pbData->init(mProgramFd, mProgramBinaryLength, mProgramMapArrayLen, mProgramMap);
+    pbs->setProgramBinaryData(pbData);
+    pbs->setReady(true);
+
+    return true;
+}
+
+bool BuildProgram::run() {
+    ALOGI("Build program is running...");
+
+    bool currBuildResult = buildProgramBinary();
+    bool currSendResult = sendResult();
+    ALOGI("Build program result: Build is %s & Send is %s.",
+            BOOLRESULT_TO_STR(currBuildResult), BOOLRESULT_TO_STR(currSendResult));
+    return false;
+}
+

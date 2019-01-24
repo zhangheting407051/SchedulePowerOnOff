@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ListItems desrciption="pq info configure">
+    <Item apcategory ="MEDIA_AND_VIDEO">
+        <Entry fun="PQSwitch"   value="0x3" />
+        <Entry fun="PQStrength" value="0x09050a" />
+    </Item>
+
+    <Item apcategory ="PHOTOGRAPHY">
+        <Entry fun="PQSwitch"   value="0x3" />
+        <Entry fun="PQStrength" value="0x09050a" />
+    </Item>
+
+    <Item apcategory ="Others">
+        <Entry fun="PQSwitch" value="0" />
+    </Item>
+</ListItems>

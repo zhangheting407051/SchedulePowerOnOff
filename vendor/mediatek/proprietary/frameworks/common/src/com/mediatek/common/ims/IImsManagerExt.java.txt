@@ -1,0 +1,15 @@
+package com.mediatek.common.ims;
+
+/**
+ * Extensions interface for ImsManager.
+ */
+public interface IImsManagerExt {
+    /**
+      * An API to customization platform enabled status.
+      * @param context The context for retrive plug-in.
+      * @param feature The IMS feature defined in ImsConfig.FeatureConstants.
+      *
+      * @return return enabled status.
+      */
+    boolean isFeatureEnabledByPlatform(int feature);
+}

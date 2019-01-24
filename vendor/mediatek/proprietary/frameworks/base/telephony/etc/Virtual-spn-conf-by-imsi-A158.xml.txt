@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<virtualSpnOverridesByImsi version="1">
+<virtualSpnOverride imsipattern="214062140612" name="R Internet"/>
+<virtualSpnOverride imsipattern="2620726207" name="o2 IMS"/>
+<virtualSpnOverride imsipattern="2140321403508" name="R MMS"/>
+<virtualSpnOverride imsipattern="262072620749xxxxxxxx" name="o2 MMS Prepaid"/>
+<virtualSpnOverride imsipattern="2140321403509" name="R MMS"/>
+<virtualSpnOverride imsipattern="2060120601889" name="Telenet Internet"/>
+<virtualSpnOverride imsipattern="2480324803005x" name="Smart/Ultra MMS"/>
+<virtualSpnOverride imsipattern="262072620739xxxxxxxx" name="o2 MMS"/>
+<virtualSpnOverride imsipattern="5050250502100" name="Truphone"/>
+<virtualSpnOverride imsipattern="2040320403" name="MVNO NL"/>
+<virtualSpnOverride imsipattern="240072400768xxxxxxxx" name="Tele2"/>
+<virtualSpnOverride imsipattern="24801248010x2" name="Send"/>
+<virtualSpnOverride imsipattern="302720302720x98xx" name="Ztar Internet"/>
+<virtualSpnOverride imsipattern="24801248010x3" name="Send"/>
+<virtualSpnOverride imsipattern="2620726207500" name="Tchibo MMS"/>
+<virtualSpnOverride imsipattern="2720127201110" name="Postmobile MMS"/>
+<virtualSpnOverride imsipattern="2620726207520" name="Lidl MMS"/>
+<virtualSpnOverride imsipattern="50502505029" name="Virgin MMS"/>
+<virtualSpnOverride imsipattern="2040420404360035xxxx" name="Cellcom International"/>
+<virtualSpnOverride imsipattern="2937029370029xxxxxxx" name="Telemach Internet"/>
+<virtualSpnOverride imsipattern="214032140352xxxxxxxx" name="Carrefour MMS"/>
+<virtualSpnOverride imsipattern="3113703113702" name="ACS WEB"/>
+<virtualSpnOverride imsipattern="20404204043914" name="Truphone"/>
+<virtualSpnOverride imsipattern="2620726207515" name="Fonic MMS"/>
+<virtualSpnOverride imsipattern="2040420404794" name="Truphone"/>
+<virtualSpnOverride imsipattern="214032140359" name="Euskaltel Internet"/>
+<virtualSpnOverride imsipattern="2480324803000x" name="Smart/Ultra MMS"/>
+<virtualSpnOverride imsipattern="214072140759577xxxxx" name="T-2"/>
+<virtualSpnOverride imsipattern="20408204080950" name="MVNO NL"/>
+<virtualSpnOverride imsipattern="214072140796692xxxxx" name="T-2"/>
+</virtualSpnOverridesByImsi>

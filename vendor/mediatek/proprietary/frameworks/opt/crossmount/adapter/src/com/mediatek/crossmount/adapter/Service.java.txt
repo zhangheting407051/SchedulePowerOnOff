@@ -1,0 +1,345 @@
+package com.mediatek.crossmount.adapter;
+
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.os.IBinder;
+import android.os.RemoteException;
+
+
+import com.mediatek.crossmount.adapter.CrossMountAdapter;
+import com.mediatek.crossmount.adapter.Device;
+
+/**
+ * The service contains its name, status and the permission.
+ * Application can mount the service from peer devices or share the service to peer devices.
+ */
+public final class Service {
+    static final String TAG = "[CrossMount]Service";
+
+
+    private CrossMountAdapter mAdapter;
+    private String mServiceId;
+    private Device mDevice;
+
+    /**
+     *  The service state.
+     */
+    public enum ServiceState {
+        /**
+         * The invalid service state. When the service is unrecognized,
+         * {@link #getState(String sharedDeviceId)} will return the invalid service state.
+         */
+        INVALID,
+
+        /**
+         * The occupied service state. The state means the service on the peer devices is
+         * unavailable to share to me now. The reason may be that the service is used by others
+         * now. Only the service on the peer devices has the state, but the service on my
+         * device doesn't have the state.
+         */
+        OCCUPIED,
+
+        /**
+         * The available service state. The state means the service on the peer devices
+         * is available to share to me now. Only the service on the peer devices has the
+         * state, but the service on my device doesn't have the state.
+         */
+        AVAILABLE,
+
+        /**
+         * The disabled service state. The state means the service on my device is turned off.
+         * Only the service on the my device has the state, but the service
+         * on peer devices doesn't have the state.
+         */
+        DIABLED,
+
+        /**
+         * The enabled service state. The state means the service on my device is turned on.
+         * Only the service on the my device has the state, but the service
+         * on peer devices doesn't have the state.
+         */
+        ENABLED,
+
+        /**
+         * The connecting service state. The state means either the service on my device is
+         * sharing to others or the serivce on peer devices is sharing to me. The connection
+         * procedure is still in progress and is not yet finished.
+         */
+        CONNECTING,
+
+        /**
+         * The connected service state. The state means either the service on my device
+         * is shared to others or the serivce on peer devices is shared to me.
+         */
+        CONNECTED
+    }
+
+    /**
+     *  The speaker role.
+     */
+    public enum SpeakerRole {
+        /**
+         * The invalid speaker role.
+         */
+        INVALID,
+
+        /**
+         * The both speaker role. It means the output sound of the speaker service is normal sound.
+         */
+        BOTH,
+
+        /**
+         * The left speaker role. It means the output sound of the speaker service is left sound.
+         */
+        LEFT,
+
+        /**
+         * The right speaker role. It means the output sound of the speaker service is right sound.
+         */
+        RIGHT
+    }
+
+    Service(String serviceId, Device device, CrossMountAdapter adapter) {
+        mServiceId = serviceId;
+        mDevice = device;
+        mAdapter = adapter;
+    }
+
+    /**
+     * Query the service id. The service id is global unique among CrossMount services.
+     * @return The service id.
+     */
+    public String getId() {
+
+        return mServiceId;
+    }
+
+    /**
+     * Query the service name. The service name is not global unique among CrossMount services.
+     * The name is to display on the UI menu for users.
+     * @return The service name.
+     */
+    public String getName() {
+
+        return mAdapter.getServiceName(mDevice.getId(), mServiceId);
+
+    }
+
+    /**
+     * Query the serial number for the service. Each service has a unique serial number.
+     * @return The serial number for the service.
+     */
+    public int getSerialNumber() {
+        return mAdapter.getServiceSerialNumber(mDevice.getId(), mServiceId);
+    }
+
+    /**
+     * Query the service state.
+     * @param sharedDeviceId the shared device ID for the service. A service can have
+     * multiple shared device ID.
+     * @return The service state.
+     */
+    public ServiceState getState(String sharedDeviceId) {
+
+
+        String state = mAdapter.getServiceStatus(mDevice.getId(), mServiceId, sharedDeviceId);
+
+        if (state == null){
+            return ServiceState.INVALID;
+        } else{
+            //String enumString = myEnum.name()
+
+            return ServiceState.valueOf(state);
+        }
+
+    }
+
+    /**
+     * Set the service permission. The service permission is default set as on.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually set the service permission.
+     * @param allow True if the service is allowed the share to peer devices
+     * @return True if succeed.
+     */
+    public boolean setAllow(boolean allow){
+
+        return mAdapter.setServiceAllow(mServiceId, allow);
+    }
+
+    /**
+     * Query the service permission.
+     * @return True if the service permission is allowed to share to others
+     */
+    public boolean getAllow(){
+
+        return mAdapter.getServiceAllow(mServiceId);
+
+    }
+
+    /**
+     * Query if the service is plug-in service.
+     * @return True if the service is plug-in service.
+     */
+    public boolean isPlugIn(){
+        return mAdapter.isPlugInService(mServiceId, mDevice.getId());
+    }
+
+    /**
+     * Query the plug-in service icon.
+     * @return The plug-in service icon.
+     */
+    public Drawable getPlugInIcon(){
+        return mAdapter.getPlugInIcon(mServiceId, mDevice.getId());
+    }
+
+    /**
+     * Query the shared device instances.
+     * @return The shared device instances.
+     */
+    public Device[] getSharedDevices(){
+
+        String[] deviceIds = mAdapter.getSharedDevices(mServiceId);
+        Device[] devices = new Device[deviceIds.length];
+
+        int i = 0;
+        for (String deviceId : deviceIds) {
+            String deviceName = mAdapter.getDeviceName(deviceId);
+            String deviceType = mAdapter.getDeviceType(deviceId);
+
+            devices[i] = new Device(deviceId, deviceName, deviceType, mAdapter);
+            i ++;
+        }
+        return devices;
+    }
+
+    /**
+     * Share the service to peer devices. When the connection status is updated,
+     * the application can use {@link #getState(String sharedDeviceId)} to query service status.
+     * @param deviceId The device id which the service is shared to.
+     * @return True if succeed.
+     */
+    public boolean shareTo(String deviceId){
+        return mAdapter.shareProviderService(mServiceId, deviceId);
+    }
+
+    /**
+     * Stop sharing the service to peer devices. When the connection status is updated,
+     * the application can use {@link #getState(String sharedDeviceId)} to query service status.
+     * @param deviceId The device id which the service is stopped sharing to.
+     * @return True if succeed.
+     */
+    public boolean stopShareTo(String deviceId){
+        return mAdapter.stopShareProviderService(mServiceId, deviceId);
+    }
+
+    /**
+     * Mount the service from the peer device. When the connection status is updated,
+     * the application can use {@link #getState(String sharedDeviceId)} to query service status.
+     * @return True if succeed.
+     */
+    public boolean mountFrom(){
+        return mAdapter.mountProviderService(mServiceId, mDevice.getId());
+    }
+
+    /**
+     * Stop mounting the service from the peer device. When the connection status is updated,
+     * the application can use {@link #getState(String sharedDeviceId)} to query service status.
+     * @return True if succeed.
+     */
+    public boolean stopMountFrom(){
+        return mAdapter.stopMountProviderService(mServiceId, mDevice.getId());
+    }
+
+    /**
+     * Query the camera ID.
+     * @return The camera ID.
+     */
+    public int getCameraId(){
+        return mAdapter.getRemoteCameraId(mDevice.getId());
+    }
+
+    /**
+     * Query the camera orientation.
+     * @return The camera orientation.
+     */
+    public int getCameraOrientation() {
+        return mAdapter.getRemoteCameraOrientation(mDevice.getId());
+    }
+
+    /**
+     * Send the input message to the controller (touch and sensor) service.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * send the input message.
+     * @param msg The input string for the the controller (touch and sensor) service
+     * @return True if succeed.
+     */
+    public boolean sendControlMessage(String msg) {
+        return mAdapter.sendControlMessage(msg);
+    }
+
+    /**
+     * Query the sensor orientation.
+     * @return The sensor orientation.
+     */
+    public int getSensorOrientation() {
+
+        return mAdapter.getSensorOrientation();
+    }
+
+    /**
+     * Set the sensor orientation.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to notify user that only using Mediatek developed CrossMount application is
+     * allowed to change the sensor orientation.
+     * @param rotate The sensor orientation
+     * @return True if succeed.
+     */
+    public boolean setSensorOrientation(int rotate) {
+
+        return mAdapter.setSensorOrientation(rotate);
+    }
+
+    /**
+     * Get the supported sensors.
+     * @return The supported sensor types
+     */
+    public int[] getSupportedSensors() {
+        return mAdapter.getSupportedSensors(mDevice.getId());
+    }
+
+    /**
+     * Get the sensor name.
+     * @param sensorType The sensor type
+     * @return The sensor name of the input sensor type
+     */
+    public String getSensorName(int sensorType) {
+        return mAdapter.getSensorName(sensorType);
+    }
+
+    /**
+     * Set activated sensors.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually set the activated sensors.
+     * @param sensorTypes The activated sensor types
+     * @return True if succeed.
+     */
+    public boolean setActivatedSensors(int[] sensorTypes) {
+        return mAdapter.setActivatedSensors(mDevice.getId(), sensorTypes);
+    }
+
+    /**
+     * Get activated sensors.
+     * @return The activiated sensor types
+     */
+    public int[] getActivatedSensors() {
+        return mAdapter.getActivatedSensors(mDevice.getId());
+    }
+
+}

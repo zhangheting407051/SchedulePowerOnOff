@@ -1,0 +1,230 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2010. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+#include "ProgramBinaryService.h"
+
+#include <utils/Log.h>
+#include <utils/Errors.h>
+#include <cutils/properties.h>
+#include <fcntl.h>
+
+using namespace android;
+
+bool g_debug_program_binary = 0;
+bool g_debug_program_binary_content = 0;
+
+
+ProgramBinaryService::ProgramBinaryService()
+        : mReady(false)
+        , mProgramFd(-1)
+        , mProgramBinaryLength(0)
+        , mProgramMapArrayLen(0)
+        , mProgramMap(NULL) {
+    ALOGI("ProgramBinaryService created.");
+}
+
+ProgramBinaryService::~ProgramBinaryService() {
+    ALOGI("ProgramBinaryService destroyed.");
+    destroy();
+}
+
+void ProgramBinaryService::init() {
+    ALOGI("ProgramBinaryService init...");
+    // Set debug property
+    char property[PROPERTY_VALUE_MAX];
+    if (property_get(PROPERTY_DEBUG_PROGRAM_BINARY, property, "0") > 0) {
+        if (atoi(property) == 1) {
+            g_debug_program_binary = 1;
+            ALOGI("ProgramBinaryService enable debugging.");
+        } else {
+            g_debug_program_binary = 0;
+            ALOGI("ProgramBinaryService disable debugging.");
+        }
+    }
+    if (property_get(PROPERTY_DEBUG_PROGRAM_BINARY_CONTENT, property, "0") > 0) {
+        if (atoi(property) == 1) {
+            g_debug_program_binary_content = 1;
+            ALOGI("ProgramBinaryService enable binary content debugging.");
+        } else {
+            g_debug_program_binary_content = 0;
+            ALOGI("ProgramBinaryService disable binary content debugging.");
+        }
+    }
+}
+
+void ProgramBinaryService::binderDied(const wp<IBinder>& /* who */) {
+    ALOGI("ProgramBinaryService died...");
+    destroy();
+}
+
+void ProgramBinaryService::destroy() {
+    if (mProgramFd >=0) {
+        ALOGI("Program binary service died, close fd(%d).", mProgramFd);
+        close(mProgramFd);
+        mProgramFd = -1;
+    }
+
+    mProgramBinaryLength = 0;
+    mProgramMapArrayLen = 0;
+
+    if (mProgramMap) {
+        delete mProgramMap;
+        mProgramMap = NULL;
+    }
+}
+
+void ProgramBinaryService::setReady(bool ready) {
+    mLock.lock();
+    mReady = ready;
+    mLock.unlock();
+}
+
+bool ProgramBinaryService::getReady() {
+    bool ready;
+    mLock.lock();
+    ready = mReady;
+    mLock.unlock();
+    return ready;
+}
+
+status_t ProgramBinaryService::onTransact(uint32_t code, const Parcel& data,
+            Parcel* reply, uint32_t) {
+    // Here, to check the calling permissions
+    IPCThreadState* self = IPCThreadState::self();
+    DEBUG_LOGD("onTransact is calling from PID=%d.", self->getCallingPid());
+
+    // For Client Read exception code
+    reply->writeInt32(0);
+    switch (code) {
+        case SET_READY:
+            {
+                CHECK_INTERFACE(IProgramBinaryService, data, reply);
+                int readyInt;
+                data.readInt32(&readyInt);
+                if (readyInt) {
+                    DEBUG_LOGD("[onTransact] SET_READY: Program binary is ready.");;
+                } else {
+                    DEBUG_LOGD("[onTransact] SET_READY: Program binary is not ready.");;
+                }
+                setReady(readyInt);
+                return NO_ERROR;
+            }break;
+
+        case GET_READY:
+            {
+                CHECK_INTERFACE(IProgramBinaryService, data, reply);
+                reply->writeInt32(getReady()? 1: 0);
+                if (getReady()) {
+                     DEBUG_LOGD("[onTransact] GET_READY: Program binary is ready.");
+                 } else {
+                     DEBUG_LOGD("[onTransact] GET_READY: Program binary is not ready!");
+                 }
+                return NO_ERROR;
+            }break;
+
+        case SET_PROGRAM_BINARY_DATA:
+            {
+                CHECK_INTERFACE(IProgramBinaryService, data, reply);
+                // Read data from parcel
+                int fd = (int)data.readFileDescriptor();
+                if (fd >= 0) {
+                    int dupFd = dup(fd);
+                    char s[256] = {0};
+                    char name[256] = {0};
+                    snprintf(s, 255, "/proc/%d/fd/%d", getpid(), dupFd);
+                    int len = readlink(s, name, sizeof(name) - 1);
+                    if (len < 0) {
+                        ALOGE("[onTransact] SET_PROGRAM_BINARY_DATA: Failed to readlink.");
+                    }
+
+                    DEBUG_LOGD("[onTransact] SET_PROGRAM_BINARY_DATA: "
+                            "Fd = %d, originalFd = %d, valid = %d, path = %s",
+                            dupFd, fd, fcntl(dupFd, F_GETFL) != -1,  name);
+                    mProgramFd = dupFd;
+                } else {
+                    DEBUG_LOGD("[onTransact] SET_PROGRAM_BINARY_DATA: Failed to read fd(%d).", fd);
+                }
+                data.readInt32(&mProgramBinaryLength);
+                data.readInt32(&mProgramMapArrayLen);
+                mProgramMap = new int64_t[mProgramMapArrayLen];
+                for (int i = 0; i < mProgramMapArrayLen; i++) {
+                    mProgramMap[i] = (int64_t)data.readInt64();
+                }
+
+                // Log for displaying binary content
+                int64_t*& arr = mProgramMap;
+                for (int i = 0; i < mProgramMapArrayLen; i += 4) {
+                    CONTENT_LOGD("[onTransact] SET_PROGRAM_BINARY_DATA: ProgramEntry #%2d: "
+                            "key 0x%.8x%.8x, offset %d, binaryLength %d, format %d",
+                            i/4, uint32_t(arr[i] >> 32), uint32_t(arr[i] & 0xffffffff),
+                            (int)((long)arr[i+1]), static_cast<int>(arr[i+2]),
+                            static_cast<int>(arr[i+3]));
+                }
+                return NO_ERROR;
+            } break;
+
+        case GET_PROGRAM_BINARY_DATA:
+            {
+                CHECK_INTERFACE(IProgramBinaryService, data, reply);
+                // Write data to parcel
+                reply->writeFileDescriptor(mProgramFd);
+                reply->writeInt32(mProgramBinaryLength);
+                reply->writeInt32(mProgramMapArrayLen);
+                for (int i = 0; i < mProgramMapArrayLen; i++) {
+                    reply->writeInt64(mProgramMap[i]);
+                }
+
+                // Log for displaying binary content
+                DEBUG_LOGD("[onTransact] GET_PROGRAM_BINARY_DATA: Fd = %d, valid = %d",
+                        mProgramFd, fcntl(mProgramFd, F_GETFL) != -1);
+                int64_t*& arr = mProgramMap;
+                for (int i = 0; i < mProgramMapArrayLen; i += 4) {
+                    CONTENT_LOGD("[onTransact] GET_PROGRAM_BINARY_DATA: ProgramEntry #%2d: "
+                            "key 0x%.8x%.8x, offset %d, binaryLength %d, format %d",
+                            i/4, uint32_t(arr[i] >> 32), uint32_t(arr[i] & 0xffffffff),
+                            (int)((long)arr[i+1]), static_cast<int>(arr[i+2]),
+                            static_cast<int>(arr[i+3]));
+                }
+                return NO_ERROR;
+            } break;
+
+        default:break;
+    }
+    return NO_ERROR;
+}
+
+

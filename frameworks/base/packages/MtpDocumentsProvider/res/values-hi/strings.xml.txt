@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP होस्ट</string>
+    <string name="downloads_app_label">डाउनलोड</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; से फ़ाइल पर पहुंच प्राप्त की जा रही है</string>
+    <string name="error_busy_device">दूसरा उपकरण व्यस्त है. उसके उपलब्ध होने तक आप फ़ाइलें स्थानांतरित नहीं कर सकते हैं.</string>
+    <string name="error_locked_device">कोई फ़ाइलें नहीं मिलीं. हो सकता है कि दूसरा उपकरण लॉक हो. यदि ऐसा है, तो उसे अनलॉक करें और पुनः प्रयास करें.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

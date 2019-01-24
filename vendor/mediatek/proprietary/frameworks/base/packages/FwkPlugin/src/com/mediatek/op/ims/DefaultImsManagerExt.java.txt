@@ -1,0 +1,52 @@
+
+
+package com.mediatek.op.ims;
+
+import android.os.SystemProperties;
+import android.util.Log;
+
+import com.mediatek.common.PluginImpl;
+import com.mediatek.common.ims.IImsManagerExt;
+
+/**
+ * Extensions interface for ImsManager.
+ */
+@PluginImpl(interfaceName = "com.mediatek.common.ims.IImsManagerExt")
+public class DefaultImsManagerExt implements IImsManagerExt {
+    private static final String TAG = "DefaultImsManagerExt";
+
+    private static final int FEATURE_TYPE_VOICE_OVER_LTE = 0;
+    private static final int FEATURE_TYPE_VIDEO_OVER_LTE = 1;
+    private static final int FEATURE_TYPE_VOICE_OVER_WIFI = 2;
+
+    @Override
+    /**
+      * An API to customization platform enabled status.
+      * @param context The context for retrive plug-in.
+      * @param feature The IMS feature defined in ImsConfig.FeatureConstants.
+      *
+      * @return return enabled status.
+      */
+
+    public boolean isFeatureEnabledByPlatform(int feature) {
+        boolean isEnabled = false;
+        switch (feature) {
+            case FEATURE_TYPE_VOICE_OVER_LTE:
+                isEnabled = ("1".equals(SystemProperties.get("persist.mtk_volte_support"))) ?
+                        true : false;
+                break;
+            case FEATURE_TYPE_VIDEO_OVER_LTE:
+                isEnabled = ("1".equals(SystemProperties.get("persist.mtk_vilte_support"))) ?
+                        true : false;
+                break;
+            case FEATURE_TYPE_VOICE_OVER_WIFI:
+                isEnabled = ("1".equals(SystemProperties.get("persist.mtk_wfc_support"))) ?
+                        true : false;
+                break;
+            default:
+                break;
+        }
+        Log.d(TAG, "Return " + isEnabled + " in default for feature: " + feature);
+        return isEnabled;
+    }
+}

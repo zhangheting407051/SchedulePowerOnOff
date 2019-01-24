@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="crop_wallpaper">வால்பேப்பரை நறுக்கு</string>
+    <string name="wallpaper_instructions">வால்பேப்பரை அமை</string>
+    <string name="wallpaper_load_fail">படிமத்தை வால்பேப்பராக ஏற்ற முடியவில்லை</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

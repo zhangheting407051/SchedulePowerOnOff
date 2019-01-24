@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Android خدمات کی لائبریری</string>
+    <string name="notification_ranker">Android اعلان کی رینکنگ سروس</string>
+    <string name="notification_ranker_autobundle_explanation">رینکنگ سروس کے ذریعے آٹو-گروپنگ کی تازہ کاری کی گئی ہے</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

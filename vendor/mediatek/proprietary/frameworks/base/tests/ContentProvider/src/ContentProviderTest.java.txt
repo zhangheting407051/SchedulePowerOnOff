@@ -1,0 +1,122 @@
+package com.mediatek.contentProvider.test;
+
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
+import android.test.InstrumentationTestCase;
+import android.util.Log;
+
+public class ContentProviderTest extends InstrumentationTestCase
+{
+  private static final String TAG = "ContentProviderTest";
+  private final long SNOOZE_DELAY = 5000L;
+  private final int TIME_DELAY = 2000;
+  private final int TIME_DELTA = 200;
+  private Context mContext = null;
+  private long mWakeupTime;
+
+  protected void setUp()
+    throws Exception
+  {
+    super.setUp();
+    if (this.mContext == null)
+      this.mContext = getInstrumentation().getTargetContext();
+  }
+
+  protected void tearDown()
+    throws Exception
+  {
+    super.tearDown();
+  }
+
+  public void testAddContacts()
+  {
+    Log.d("ContentProviderTest", "testAddContacts begin == ");
+    Uri localUri1 = Uri.parse("content://com.android.contacts/raw_contacts");
+    ContentResolver localContentResolver = this.mContext.getContentResolver();
+    ContentValues localContentValues = new ContentValues();
+    long l = ContentUris.parseId(localContentResolver.insert(localUri1, localContentValues));
+    Log.d("ContentProviderTest", " 111111111 contactId contactId = " + l);
+    Uri localUri2 = Uri.parse("content://com.android.contacts/data");
+    localContentValues.put("raw_contact_id", Long.valueOf(l));
+    localContentValues.put("mimetype", "vnd.android.cursor.item/name");
+    localContentValues.put("data2", "michael");
+    localContentResolver.insert(localUri2, localContentValues);
+    localContentValues.clear();
+    localContentValues.put("raw_contact_id", Long.valueOf(l));
+    localContentValues.put("mimetype", "vnd.android.cursor.item/phone_v2");
+    localContentValues.put("data2", "2");
+    localContentValues.put("data1", "10086");
+    localContentResolver.insert(localUri2, localContentValues);
+    localContentValues.clear();
+    localContentValues.put("raw_contact_id", Long.valueOf(l));
+    localContentValues.put("mimetype", "vnd.android.cursor.item/email_v2");
+    localContentValues.put("data2", "2");
+    localContentValues.put("data1", "michael@qq.com");
+    localContentResolver.insert(localUri2, localContentValues);
+    Log.d("ContentProviderTest", "testAddContacts end == ");
+  }
+
+  public void testDeleteContacts()
+  {
+    testAddContacts();
+    Log.d("ContentProviderTest", "testDeleteContacts begin == ");
+    Uri localUri = Uri.parse("content://com.android.contacts/raw_contacts");
+    ContentResolver localContentResolver = this.mContext.getContentResolver();
+    Cursor localCursor1 = localContentResolver.query(localUri, new String[] { "_id" },
+                               "display_name=?", new String[] { "michael" }, null);
+    while (localCursor1.moveToNext())
+    {
+      localCursor1.getInt(0);
+      localContentResolver.delete(localUri, "display_name=?", new String[] { "michael" });
+    }
+    Cursor localCursor2 = localContentResolver.query(localUri,
+                        new String[] { "_id" }, "display_name=?", new String[] { "michael" }, null);
+    Log.d("ContentProviderTest", "testDeleteContacts end == " + localCursor2.getCount());
+  }
+
+  public void testQueryContacts()
+  {
+    testAddContacts();
+    Log.d("ContentProviderTest", "testQuery begin == ");
+    String str1 = "";
+    Uri localUri = Uri.parse("content://com.android.contacts/contacts");
+    Cursor localCursor = this.mContext.getContentResolver().query(localUri,
+                                    new String[] { "display_name" }, null, null, null);
+    while (localCursor.moveToNext())
+    {
+      String str2 = localCursor.getString(0);
+      str1 = str1 + str2;
+    }
+    assertTrue(str1.contains("michael"));
+    Log.d("ContentProviderTest", "testQuery end == ");
+  }
+
+  public void testUpdateContacts()
+  {
+    testAddContacts();
+    Log.d("ContentProviderTest", "testUpdateContacts begin == ");
+    Uri localUri1 = Uri.parse("content://com.android.contacts/data");
+    ContentResolver localContentResolver = this.mContext.getContentResolver();
+    ContentValues localContentValues = new ContentValues();
+    localContentValues.put("data1", "999999999999999");
+    localContentResolver.update(localUri1, localContentValues, "mimetype=? and raw_contact_id<?",
+                               new String[] { "vnd.android.cursor.item/phone_v2", "100" });
+    Uri localUri2 = Uri.parse("content://com.android.contacts/data");
+    String str1 = "";
+    Cursor localCursor = localContentResolver.query(localUri2,
+                                new String[] { "data1" }, null, null, null);
+    while (localCursor.moveToNext())
+    {
+      String str2 = localCursor.getString(0);
+      Log.d("ContentProviderTest", " 222222222222 contactsNumber = " + str2);
+      str1 = str1 + str2;
+    }
+    assertTrue(str1.contains("999999999999999"));
+    Log.d("ContentProviderTest", "testUpdateContacts end == ");
+  }
+
+}

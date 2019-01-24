@@ -1,0 +1,427 @@
+#define LOG_TAG "FactoryAutoTest"
+
+#include "JNIHelp.h"
+#include "jni.h"
+#include <utils/Log.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/inotify.h>
+#include <sys/limits.h>
+#include <sys/poll.h>
+#include <linux/input.h>
+#include <errno.h>
+
+#include <input/Input.h>
+#include <input/InputDevice.h>
+#include <input/Keyboard.h>
+#include <input/KeyLayoutMap.h>
+//#include <input/KeyCharacterMap.h>
+#include <input/VirtualKeyMap.h>
+#include <utils/String8.h>
+//#include <utils/threads.h>
+//#include <utils/Log.h>
+//#include <utils/threads.h>
+//#include <utils/List.h>
+#include <utils/Errors.h>
+#include <utils/PropertyMap.h>
+
+#include <cutils/properties.h>
+#include <ui/PixelFormat.h>
+#include <ui/Rect.h>
+#include <ui/Region.h>
+#include <ui/DisplayInfo.h>
+
+#include <gui/ISurfaceComposer.h>
+#include <gui/Surface.h>
+#include <gui/SurfaceComposerClient.h>
+#include <private/gui/LayerState.h>
+
+#include <SkBitmap.h>
+#include <SkStream.h>
+#include <SkImageDecoder.h>
+
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+#include <EGL/eglext.h>
+
+namespace android {
+
+static jlong android_server_FactoryAutoTestService_initLcdColorManager(JNIEnv*, jobject)
+{
+    sp<SurfaceComposerClient> mSession = new SurfaceComposerClient();
+    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
+            ISurfaceComposer::eDisplayIdMain));
+    DisplayInfo dinfo;
+    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+    if (status)
+        return -1;
+
+    SurfaceComposerClient::setDisplayProjection(dtoken, DisplayState::eOrientationDefault, Rect(dinfo.w, dinfo.h), Rect(dinfo.w, dinfo.h));
+    // create the native surface
+    sp<SurfaceControl> control = mSession->createSurface(String8("lcd_test"),
+            dinfo.w, dinfo.h, PIXEL_FORMAT_RGB_565);
+
+    SurfaceComposerClient::openGlobalTransaction();
+    control->setLayer(0x200000);
+    SurfaceComposerClient::closeGlobalTransaction();
+
+    sp<Surface> s = control->getSurface();
+
+    EGLint w, h;
+    EGLint numConfigs;
+    EGLConfig config;
+    EGLSurface surface;
+    EGLContext context;
+
+    EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+
+    ALOGD("initialize opengl and egl");
+    EGLBoolean eglret = eglInitialize(display, 0, 0);
+    if (eglret == EGL_FALSE) {
+        ALOGE("eglInitialize(display, 0, 0) return EGL_FALSE");
+    }
+    if (false) {
+        const EGLint attribs[] = {
+                EGL_RED_SIZE,   8,
+                EGL_GREEN_SIZE, 8,
+                EGL_BLUE_SIZE,  8,
+                EGL_DEPTH_SIZE, 0,
+                EGL_NONE
+        };
+        eglChooseConfig(display, attribs, &config, 1, &numConfigs);
+        context = eglCreateContext(display, config, NULL, NULL);
+     } else {
+        const EGLint attribs[] = {
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL_RED_SIZE,   5,
+            EGL_GREEN_SIZE, 6,
+            EGL_BLUE_SIZE,  5,
+            EGL_DEPTH_SIZE, 16,
+            EGL_NONE
+        };
+        eglChooseConfig(display, attribs, &config, 1, &numConfigs);
+        int attrib_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2,
+                       EGL_NONE, EGL_NONE};
+        context = eglCreateContext(display, config, EGL_NO_CONTEXT, attrib_list);
+    }
+
+    surface = eglCreateWindowSurface(display, config, s.get(), NULL);
+    eglret = eglQuerySurface(display, surface, EGL_WIDTH, &w);
+    if (eglret == EGL_FALSE) {
+        ALOGE("eglQuerySurface(display, surface, EGL_WIDTH, &w) return EGL_FALSE");
+    }
+    eglret = eglQuerySurface(display, surface, EGL_HEIGHT, &h);
+    if (eglret == EGL_FALSE) {
+        ALOGE("eglQuerySurface(display, surface, EGL_HEIGHT, &h) return EGL_FALSE");
+    }
+
+    if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
+        ALOGE("eglMakeCurrent(display, surface, surface, context) return EGL_FALSE");
+        return NO_INIT;
+    }
+
+    //glShadeModel(GL_FLAT);
+    glDisable(GL_DITHER);
+    glDisable(GL_SCISSOR_TEST);
+
+    char cv[PROPERTY_VALUE_MAX] = {0};
+    int cc = 0;
+    int tc = 0;
+    while(true){
+        property_get("sys.wind.color", cv, "0");
+        tc = atoi(cv);
+        if(tc == 0){
+            //property_set("sys.wind.colortest", "0");
+            break;
+        }else if(tc == cc){
+            usleep(500000);
+            continue;
+        }else{
+            cc = tc;
+            ALOGE("yangjiajun  cc: %d", cc);
+            switch(cc){
+                case 1:
+                    glClearColor(1,0,0,1);
+                    break;
+                case 2:
+                    glClearColor(0,1,0,1);
+                    break;
+                case 3:
+                    glClearColor(0,0,1,1);
+                    break;
+                case 4:
+                    glClearColor(0,0,0,1);
+                    break;
+                case 5:
+                    glClearColor(1,1,1,1);
+                    break;
+                case 6:
+                    glClearColor(0.39f,0.39f,0.39f,1);
+                    break;
+            }
+            glClear(GL_COLOR_BUFFER_BIT);
+            eglSwapBuffers(display, surface);
+            usleep(500000);
+        }
+    }
+
+    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    eglDestroyContext(display, context);
+    eglDestroySurface(display, surface);
+    s.clear();
+    control.clear();
+    eglTerminate(display);
+    jlong _ret = 0L;
+    return reinterpret_cast<jlong>(_ret);
+}
+
+#define BITS_PER_LONG (sizeof(unsigned long) * 8)
+#define BITS_TO_LONGS(x) (((x) + BITS_PER_LONG - 1) / BITS_PER_LONG)
+
+#define test_bit(bit, array) \
+    ((array)[(bit)/BITS_PER_LONG] & (1 << ((bit) % BITS_PER_LONG)))
+
+#define DEVICE_SIZE 16
+
+static struct pollfd *ufds;
+static int mNextDeviceId = 0;
+static KeyMap keyMap[DEVICE_SIZE];
+static int array_len = 0;
+static jint *key_array;//[] = {0xac/*HOME*/, 0x72/*vol_down*/, 0x73/*vol_up*/, 0x9e/*back*/, 0x8b/*menu*/};
+static int key_down[8]  = {0};
+static int key_up[8]    = {0};
+
+static void process_keyevent(int32_t key_code, int is_down){
+    int i;
+    for(i = 0; i < array_len; i ++){
+        if(key_code == key_array[i]){
+            if(is_down){
+                key_down[i] = 1;
+            }else{
+                key_up[i] = 1;
+            }
+        }
+    }
+}
+
+static void filter_key_device(const char *devicePath)
+{
+    char buffer[80];
+    unsigned long ev_bits[BITS_TO_LONGS(EV_MAX)];
+
+    ALOGD("Opening device: %s", devicePath);
+
+    int fd = open(devicePath, O_RDWR | O_CLOEXEC);
+    if(fd < 0) {
+        ALOGE("could not open %s, %s\n", devicePath, strerror(errno));
+        return;
+    }
+
+    ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits);
+    if (!test_bit(EV_KEY, ev_bits)) {
+        ALOGD("not key device!");
+        close(fd);
+        return;
+    }
+
+    InputDeviceIdentifier identifier;
+
+    // Get device name.
+    if(ioctl(fd, EVIOCGNAME(sizeof(buffer) - 1), &buffer) < 1) {
+        //fprintf(stderr, "could not get device name for %s, %s\n", devicePath, strerror(errno));
+    } else {
+        buffer[sizeof(buffer) - 1] = '\0';
+        identifier.name.setTo(buffer);
+    }
+
+    // Get device driver version.
+    int driverVersion;
+    if(ioctl(fd, EVIOCGVERSION, &driverVersion)) {
+        ALOGE("could not get driver version for %s, %s\n", devicePath, strerror(errno));
+        close(fd);
+        return;
+    }
+
+    // Get device identifier.
+    struct input_id inputId;
+    if(ioctl(fd, EVIOCGID, &inputId)) {
+        ALOGE("could not get device input id for %s, %s\n", devicePath, strerror(errno));
+        close(fd);
+        return;
+    }
+    identifier.bus = inputId.bustype;
+    identifier.product = inputId.product;
+    identifier.vendor = inputId.vendor;
+    identifier.version = inputId.version;
+
+    // Get device physical location.
+    if(ioctl(fd, EVIOCGPHYS(sizeof(buffer) - 1), &buffer) < 1) {
+        //fprintf(stderr, "could not get location for %s, %s\n", devicePath, strerror(errno));
+    } else {
+        buffer[sizeof(buffer) - 1] = '\0';
+        identifier.location.setTo(buffer);
+    }
+
+    // Get device unique id.
+    if(ioctl(fd, EVIOCGUNIQ(sizeof(buffer) - 1), &buffer) < 1) {
+        //fprintf(stderr, "could not get idstring for %s, %s\n", devicePath, strerror(errno));
+    } else {
+        buffer[sizeof(buffer) - 1] = '\0';
+        identifier.uniqueId.setTo(buffer);
+    }
+
+    // Fill in the descriptor.
+    //assignDescriptorLocked(identifier);
+
+    // Make file descriptor non-blocking for use with poll().
+    if (fcntl(fd, F_SETFL, O_NONBLOCK)) {
+        ALOGE("Error %d making device file descriptor non-blocking.", errno);
+        close(fd);
+        return;
+    }
+
+    int deviceId = mNextDeviceId ++;
+    //Device* device = new Device(fd, deviceId, String8(devicePath), identifier);
+    String8 configurationFile;
+    PropertyMap* configuration = NULL;
+    //-----------------------------------------------------------------------------------------------------------------2
+    configurationFile = getInputDeviceConfigurationFilePathByDeviceIdentifier(
+            identifier, INPUT_DEVICE_CONFIGURATION_FILE_TYPE_CONFIGURATION);
+    if (configurationFile.isEmpty()) {
+        ALOGD("No input device configuration file found for device '%s'.",
+                identifier.name.string());
+    } else {
+        status_t status = PropertyMap::load(configurationFile,
+                &configuration);
+        if (status) {
+            ALOGE("Error loading input device configuration file for device '%s'.  "
+                    "Using default configuration.",
+                    identifier.name.string());
+        }
+    }
+    //-----------------------------------------------------------------------------------------------------------------3
+    //ALOGD("keyMap is null? %d", (&keyMap[deviceId] == NULL));
+    keyMap[deviceId].load(identifier, configuration);
+    //delete device;
+
+    ufds[deviceId].fd = fd;
+    ufds[deviceId].events = POLLIN;
+}
+
+static void scan_dir(const char *dirname)
+{
+    char devname[PATH_MAX];
+//    char realname[16] = {0};
+    char *filename;
+    DIR *dir;
+    struct dirent *de;
+    dir = opendir(dirname);
+    if(dir == NULL)
+        return;
+    strcpy(devname, dirname);
+    filename = devname + strlen(devname);
+    *filename++ = '/';
+    ufds = (pollfd*)calloc(DEVICE_SIZE, sizeof(ufds[0]));
+    while((de = readdir(dir))) {
+        //ALOGD("scan dir...d_name: %s", de->d_name);
+        if(de->d_name[0] == '.' &&
+           (de->d_name[1] == '\0' ||
+            (de->d_name[1] == '.' && de->d_name[2] == '\0')))
+            continue;
+        strcpy(filename, de->d_name);
+        //ALOGD("scan dir...devname: %s", devname);
+        filter_key_device(devname);
+    }
+    closedir(dir);
+}
+
+static void android_server_FactoryAutoTestService_testKeys(JNIEnv* env, jobject, jintArray array)
+{
+    struct input_event event;
+    int i, res;
+    int j, count = 0;
+    int32_t outKeycode = 0;
+    uint32_t outFlags = 0;
+    ALOGD("start key monitor...");
+    scan_dir("/dev/input");
+    ALOGD("scan end!");
+    key_array = env->GetIntArrayElements(array, NULL);
+    array_len = env->GetArrayLength(array);
+    while(1) {
+        poll(ufds, mNextDeviceId, -1);
+        for(i = 0; i < mNextDeviceId; i++) {
+            if(ufds[i].revents) {
+                if(ufds[i].revents & POLLIN) {
+                    ALOGD("before read...");
+                    res = read(ufds[i].fd, &event, sizeof(event));
+                    if(res < (int)sizeof(event)){
+                        env->ReleaseIntArrayElements(array, key_array, 0);
+                        return;
+                    }
+                    if(event.type == 1){
+                        keyMap[i].keyLayoutMap->mapKey(event.code, 0, &outKeycode, &outFlags);
+                        process_keyevent(outKeycode, event.value);
+                        count = 0;
+                        for(j = 0; j < array_len; j ++){
+                            count += key_down[j] + key_up[j];
+                        }
+                        ALOGD("process_keyevent code: %x    count: %d", event.code, count);
+                        if(count == array_len * 2){
+                            property_set("sys.wind.keytestval", "1");
+                            env->ReleaseIntArrayElements(array, key_array, 0);
+                            return;
+                        }
+                    }
+                    //printf("%d:   ", i);
+                    //printf("%04x %04x %08x\n", event.type, event.code, event.value);
+                }
+            }
+        }
+    }
+    env->ReleaseIntArrayElements(array, key_array, 0);
+    return;
+}
+
+static jstring android_server_FactoryAutoTestService_getFailKeys(JNIEnv* env, jobject)
+{
+    char buf[128] = {0};
+    int i, j = 0;
+    for(i = 0; i < array_len; i ++){
+        if(!key_down[i]){
+            j += sprintf(buf + j, "+%d,", key_array[i]);
+        }
+        if(!key_up[i]){
+            j += sprintf(buf + j, "-%d,", key_array[i]);
+        }
+    }
+    return env->NewStringUTF(buf);
+}
+
+static jstring android_server_FactoryAutoTestService_getSc(JNIEnv* env, jobject)
+{
+    char buf[16] = "wind_6689";
+    return env->NewStringUTF(buf);
+}
+
+static JNINativeMethod sMethods[] = {
+     /* name, signature, funcPtr */
+    {"initLcdColorManager", "()J", (void*)android_server_FactoryAutoTestService_initLcdColorManager},
+    {"testKeys", "([I)V", (void*)android_server_FactoryAutoTestService_testKeys},
+    {"getFailKeys", "()Ljava/lang/String;", (void*)android_server_FactoryAutoTestService_getFailKeys},
+    {"getSc", "()Ljava/lang/String;", (void*)android_server_FactoryAutoTestService_getSc},
+};
+
+int register_android_server_FactoryAutoTestService(JNIEnv* env)
+{
+    return jniRegisterNativeMethods(env, "com/android/server/FactoryAutoTestService",
+                                    sMethods, NELEM(sMethods));
+}
+
+} /* namespace android */

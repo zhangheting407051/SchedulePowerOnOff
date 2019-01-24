@@ -1,0 +1,284 @@
+
+//chusuxia@wind-mobi.com 20160408 add for simlock -s
+// for SimMe encrypt
+//#ifdef WIND_DEF_SML_SUPPORT
+#define LOG_TAG "WindEncryptJNI"
+
+#include "jni.h"
+#include "JNIHelp.h"
+#include "utils/Log.h"
+#include <android/log.h>
+#include <string.h>
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
+
+// declare definitions
+char* get_encrypted_imei(const char* origi_imei);
+char* get_encrypted_imei_telcel(const char* origi_imei);
+char* get_encrypted_imei_esy(const char* origi_imei);
+char* get_encrypted_imei_azu(const char* origi_imei);
+char result_imei[18];
+char tempImei[18];
+
+static jstring encrypt(JNIEnv *env, jobject clazz, jstring srcStr)
+{
+	LOGI("com_wind_encrypted, encrypt()");
+	// transform jstring to c string
+	const char* imei = env->GetStringUTFChars(srcStr, NULL);
+
+	if (imei == NULL) {
+	    ALOGV("%s, sorry, OOM!", LOG_TAG);
+		jniThrowException(env, "java/lang/RuntimeException", "Out of memory");
+		return NULL;
+	}
+
+
+	ALOGV("%s, %s, sakura", LOG_TAG, imei);
+	get_encrypted_imei_telcel(imei);
+	
+  ALOGV("%s, tempImei: %s", LOG_TAG, result_imei);
+
+	env->ReleaseStringUTFChars(srcStr, imei);
+
+	return env->NewStringUTF(result_imei);
+}
+
+//chusuxia@wind-mobi.com 20160714 add start
+static jstring encryptnewmodel(JNIEnv *env, jobject clazz, jstring srcStr)
+{
+	LOGI("com_wind_encrypted, encryptnewmodel()");
+	// transform jstring to c string
+	const char* imei = env->GetStringUTFChars(srcStr, NULL);
+
+	if (imei == NULL) {
+	    ALOGV("%s, sorry, OOM!", LOG_TAG);
+		jniThrowException(env, "java/lang/RuntimeException", "Out of memory");
+		return NULL;
+	}
+
+	ALOGV("%s, %s, dingfangming51", LOG_TAG, imei);
+	get_encrypted_imei_esy(imei);
+
+	
+  ALOGV("%s, tempImei: %s", LOG_TAG, result_imei);
+
+	env->ReleaseStringUTFChars(srcStr, imei);
+
+	return env->NewStringUTF(result_imei);
+}
+//chusuxia@wind-mobi.com 20160714 add end
+
+char* get_encrypted_imei(const char* orig_imei)
+{
+	strcpy(result_imei, orig_imei);
+	return result_imei;
+}
+
+char* get_encrypted_imei_telcel(const char* orig_imei)
+{
+	int CLIPPER_KEY[15][7] = {
+	{0x1037, 0x6814, 0xEF71, 0x18CA, 0x1E91, 0xA294, 0x2EC0},
+	{0x21E2, 0x35A3, 0xBA74, 0x33A4, 0xE5E7, 0x4DCF, 0x57AD},
+	{0x7516, 0xCE81, 0xF725, 0xA855, 0xDD55, 0x9DA9, 0x733A},
+	{0xC662, 0x86D2, 0xC8E6, 0x3FEB, 0x1C13, 0x47B1, 0x6DA1},
+	{0x2B72, 0x8DE1, 0x1F70, 0xC517, 0x7473, 0xDD1B, 0xC2DD},
+	{0x86EA, 0xEC14, 0xBEB8, 0x5D36, 0x957A, 0x70B0, 0x7CB7},
+	{0x64E3, 0x2E31, 0x16D5, 0x7CBE, 0x15DB, 0xFAD7, 0x6AD3},
+	{0x3184, 0x20AE, 0x2045, 0xAB04, 0xD90E, 0xF87C, 0x4531},
+	{0x1893, 0x9CFE, 0x3215, 0xDDA7, 0x3054, 0xDCB1, 0x91AC},
+	{0xBC67, 0x1941, 0x04DE, 0x3378, 0xCC26, 0x0B27, 0xC5F1},
+	{0x31D2, 0x93AC, 0x6934, 0x04FE, 0x5876, 0xACB3, 0x87EA},
+	{0x0043, 0x9024, 0xEFDC, 0x1290, 0x3BFC, 0x2222, 0x46DD},
+	{0x4B12, 0x7843, 0xFC05, 0x2099, 0x4621, 0xED28, 0x7319},
+	{0x245D, 0x2120, 0xCC40, 0x10DD, 0x0051, 0x332F, 0x9172},
+	{0x2099, 0x1090, 0xABF2, 0x3404, 0xEE31, 0x0307, 0xFF30},
+};
+int CLIPPER_WEIGHT[15] = {76, 69, 8, 41, 136, 97, 365, 54, 98, 65, 785, 87, 32, 765, 89};
+
+  	int sum_imei = 0;
+    int key_index;
+    int len_imei = strlen(orig_imei);
+
+    // check the length of imei, must be 15
+    if (len_imei != 15) {
+        printf("Error IMEI!");
+        return NULL;
+    }
+
+	for (int i = 0; i < len_imei; i++) {
+        // sum_imei += (orig_imei[i] - '0') * (14 - i);
+        sum_imei += (orig_imei[i] - '0') * CLIPPER_WEIGHT[i];
+    }
+    key_index = sum_imei % len_imei;
+	
+	// 填充数据到17位
+	memcpy(&(tempImei[0]), &(orig_imei[14]), 1);
+	memcpy(&(tempImei[1]), orig_imei, 15);
+	memcpy(&(tempImei[16]), &(orig_imei[13]), 1);
+
+	// 循环扩散 
+	char temp;
+	for (int j = 0; j < 17/2; j++) {
+	    temp = tempImei[j];
+	    tempImei[j] = tempImei[16 - j];
+		tempImei[16 - j] = temp;
+	}
+
+	// 循环加密
+	int kk = key_index;
+	for (int jj = key_index; jj < 15; )
+	{
+		while (kk > 6) kk = kk % 7;
+		tempImei[jj] = (~tempImei[jj]) ^ CLIPPER_KEY[key_index][kk];
+		tempImei[jj+1] = (~tempImei[jj+1]) ^ (CLIPPER_KEY[key_index][kk]>>8);
+		kk += 2;
+		jj += 2;
+	}
+
+	// print
+	for (int ii = 0; ii < 17; ii++)
+	{
+		unsigned int src = (unsigned int) tempImei[ii];
+		src = src % 10;
+		result_imei[ii] = (char) ('0' + src);
+	}
+	result_imei[17] = '\0';
+
+	ALOGV("%s, after encrypt: resutl = %s", LOG_TAG, tempImei);
+	return result_imei;
+}
+
+char* get_encrypted_imei_esy(const char* orig_imei)
+{
+	int CLIPPER_KEY[15][7] = {
+	{0x64E3, 0x2E31, 0x16D5, 0x7CBE, 0x15DB, 0xFAD7, 0x7FD5},
+	{0x21E2, 0x35A3, 0xBA74, 0x33A4, 0xE5E7, 0x4DCF, 0x57AD},
+	{0x1893, 0x9CFE, 0x3215, 0xDDA7, 0x3054, 0xDCB1, 0x91AC},
+	{0x7516, 0xCE81, 0xF725, 0xA855, 0xDD55, 0x9DA9, 0x733A},
+	{0xC662, 0x86D2, 0xC8E6, 0x3FEB, 0x1C13, 0x47B1, 0x6DA1},
+	{0x2099, 0x1090, 0xABF2, 0x3404, 0xEE31, 0x0307, 0xFF30},
+	{0x86EA, 0xEC14, 0xBEB8, 0x5D36, 0x957A, 0x70B0, 0x7CB7},
+	{0x31D2, 0x93AC, 0x6934, 0x04FE, 0x5876, 0xACB3, 0x87EA},
+	{0x2B72, 0x8DE1, 0x1F70, 0xC517, 0x7473, 0xDD1B, 0xC2DD},
+	{0x3184, 0x20AE, 0x2045, 0xAB04, 0xD90E, 0xF87C, 0x4531},
+	{0x1037, 0x6814, 0xEF71, 0x18CA, 0x1E91, 0xA294, 0x2EC0},
+	{0x4B12, 0x7843, 0xFC05, 0x2099, 0x4621, 0xED28, 0x7319},
+	{0xBC67, 0x1941, 0x04DE, 0x3378, 0xCC26, 0x0B27, 0xC5F1},
+	{0x245D, 0x2120, 0xCC40, 0x10DD, 0x0051, 0x332F, 0x9172},
+	{0x0043, 0x9024, 0xEFDC, 0x1290, 0x3BFC, 0x2222, 0x46DD},
+	//{},
+	//{}
+};
+int CLIPPER_WEIGHT[15] = {76, 69, 8, 41, 136, 97, 365, 54, 98, 65, 785, 87, 32, 765, 89};
+
+	  int sum_imei = 0;
+    int key_index;
+    int len_imei = strlen(orig_imei);
+
+    // check the length of imei, must be 15
+    if (len_imei != 15) {
+        printf("Error IMEI!");
+        return NULL;
+    }
+
+	for (int i = 0; i < len_imei; i++) {
+        // sum_imei += (orig_imei[i] - '0') * (14 - i);
+        sum_imei += (orig_imei[i] - '0') * CLIPPER_WEIGHT[i];
+    }
+    key_index = sum_imei % len_imei;
+	
+	// 填充数据到16位
+	memcpy(&(tempImei[0]), &(orig_imei[14]), 1);
+	memcpy(&(tempImei[1]), orig_imei, 15);
+
+	// 循环扩散 
+	char temp;
+	for (int j = 0; j < 16/2; j++) {
+	    temp = tempImei[j];
+	    tempImei[j] = tempImei[15 - j];
+		tempImei[15 - j] = temp;
+	}
+
+	// 循环加密
+	int kk = key_index;
+	for (int jj = key_index; jj < 14; )
+	{
+		while (kk > 6) kk = kk % 7;
+		tempImei[jj] = (~tempImei[jj]) ^ CLIPPER_KEY[key_index][kk];
+		tempImei[jj+1] = (~tempImei[jj+1]) ^ (CLIPPER_KEY[key_index][kk]>>8);
+		kk += 2;
+		jj += 2;
+	}
+
+	// print
+	for (int ii = 0; ii < 16; ii++)
+	{
+		unsigned int src = (unsigned int) tempImei[ii];
+		src = src % 10;
+		result_imei[ii] = (char) ('0' + src);
+	}
+  result_imei[16] = '\0';
+
+	ALOGV("%s, after encrypt: resutl = %s", LOG_TAG, tempImei);
+	return result_imei;
+}
+
+char* get_encrypted_imei_azu(const char* orig_imei)
+{
+    int len_imei = strlen(orig_imei);
+		int i,j;
+		unsigned int src_a,src_b;
+		
+    // check the length of imei, must be 15
+    if (len_imei != 15) {
+        printf("Error IMEI!");
+        return NULL;
+    }
+
+		for(i=0,j=0; j<7;i++,j++)
+		{
+			//result_imei[j] = (char) (((unsigned int)(orig_imei[i] - '0') + (unsigned int)(orig_imei[++i] - '0')) % 10 + '0');
+				src_a = (unsigned int)(orig_imei[i] - '0');
+				i++;
+				src_b = (unsigned int)(orig_imei[i] - '0');
+				result_imei[j] = (char) ((src_a + src_b) % 10 + '0');
+				
+		}
+		
+		result_imei[j] = orig_imei[0];
+		
+  	result_imei[8] = '\0';
+  	
+		return result_imei;
+}
+
+static JNINativeMethod sMethods[] = {
+	{ "native_encrypt", "(Ljava/lang/String;)Ljava/lang/String;", (void*) encrypt },
+    //chusuxia@wind-mobi.com 20160714 add start
+    { "native_encryptnewmodel", "(Ljava/lang/String;)Ljava/lang/String;", (void*) encryptnewmodel}
+    //chusuxia@wind-mobi.com 20160714 add end
+};
+
+int register_wind_Encryptor(JNIEnv *env)
+{
+	ALOGV("%s, register", LOG_TAG);
+	return jniRegisterNativeMethods(env, "android/encryptor/Encryptor", sMethods, NELEM(sMethods));
+}
+
+extern "C" jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv* env = NULL;
+	jint result = -1; 
+
+    if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+        ALOGE("GetEnv failed!");
+        return result;
+    }   
+    ALOG_ASSERT(env, "Could not retrieve the env!");
+
+	register_wind_Encryptor(env);
+
+    return JNI_VERSION_1_4;
+}
+
+//#endif//WIND_DEF_SML_SUPPORT
+//chusuxia@wind-mobi.com 20160408 add for simlock -e

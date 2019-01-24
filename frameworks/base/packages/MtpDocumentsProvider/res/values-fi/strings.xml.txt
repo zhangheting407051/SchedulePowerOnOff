@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP-isäntä</string>
+    <string name="downloads_app_label">Lataukset</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Käsitellään laitteen &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; tiedostoja</string>
+    <string name="error_busy_device">Toinen laite on varattu. Tiedostoja ei voi siirtää ennen kuin laite on käytettävissä.</string>
+    <string name="error_locked_device">Tiedostoja ei löydy. Toinen laite voi olla lukittu. Poista laitteen lukitus ja yritä uudelleen.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

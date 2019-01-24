@@ -1,0 +1,4 @@
+LOCAL_PATH:= $(call my-dir)
+
+# Build all make files under sub-directory
+include $(call all-makefiles-under, $(LOCAL_PATH))

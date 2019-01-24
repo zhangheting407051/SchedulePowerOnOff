@@ -1,0 +1,19 @@
+######################################################
+#  CrossMount Config file
+######################################################
+
+# Configure if service is supported
+camera_service=true
+speaker_service=true
+mic_service=true
+touch_sensor_service=true
+sw_service=true
+
+# Configure if different mount concurrency is supported
+diff_mount_concurrency=true
+
+# Configure camera resolution
+# 0: 1080p, 1: 720p
+camera_resolution=0
+
+

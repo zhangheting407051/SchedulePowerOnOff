@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP ஹோஸ்ட்</string>
+    <string name="downloads_app_label">பதிவிறக்கங்கள்</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">கோப்புகளை &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; இலிருந்து அணுகுகிறது</string>
+    <string name="error_busy_device">மற்ற சாதனம் பிஸியாக உள்ளது. அது கிடைக்கும் வரை நீங்கள் கோப்புகளை இடமாற்ற முடியாது.</string>
+    <string name="error_locked_device">கோப்புகள் எதுவும் காணப்படவில்லை. மற்ற சாதனம் பூட்டப்பட்டிருக்கலாம். அப்படிப் பூட்டப்பட்டிருந்தால், அதைத் திறந்துவிட்டு மீண்டும் முயற்சிக்கவும்.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

@@ -1,0 +1,159 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2015. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+package com.mediatek.op.sms;
+
+import android.app.PendingIntent;
+import android.app.PendingIntent.CanceledException;
+import android.content.Context;
+import android.telephony.Rlog;
+import android.os.SystemProperties;
+
+import com.mediatek.common.PluginImpl;
+import com.mediatek.common.sms.IDataOnlySmsFwkExt;
+//For 4G data only, this class will check 4G data only and prompt to user
+import com.mediatek.op.telephony.LteDataOnlyController;
+
+import java.util.ArrayList;
+
+@PluginImpl(interfaceName = "com.mediatek.common.sms.IDataOnlySmsFwkExt")
+public class DataOnlySmsFwkExt implements IDataOnlySmsFwkExt {
+
+    private static String TAG = "DataOnlySmsFwkExt";
+    private static final int RESULT_ERROR_GENERIC_FAILURE    = 1;
+
+    /**
+     * Check 4G data only mode on/off. Pure sim operation need not call this,
+     * such as read sms
+     *
+     * @param sentIntent PendingIntent that is broadcast when the corresponding
+     *            message part has been sent.
+     * @param subId The subId to check permission.
+     * @param context The Context.
+     * @return true 4G data only on; false off.
+     */
+    public boolean is4GDataOnlyMode(PendingIntent sentIntent, int subId,
+            Context context){
+        ArrayList<PendingIntent> sentIntents = new ArrayList<PendingIntent>(1);
+        sentIntents.add(sentIntent);
+        return is4GDataOnlyMode(sentIntents, subId, context);
+    }
+
+    /**
+     * Check 4G data only mode on/off.
+     * Pure sim operation need not call this, such as read sms
+     *
+     * @param sentIntents if not null, an ArrayList of
+     *   <code>PendingIntent</code>s (one for each message part) that is
+     *   broadcast when the corresponding message part has been sent.
+     *  The result code will be Activity.RESULT_OK for success,
+     *  or one of these errors:<br>
+     *  For <code>RESULT_ERROR_GENERIC_FAILURE</code> the sentIntent may include
+     *  the extra "errorCode" containing a radio technology specific value,
+     *  generally only useful for troubleshooting.<br>
+     *
+     * @param subId The subId to check permission.
+     * @param context The Context.
+     * @return true 4G data only on; false off.
+     *
+     */
+    public boolean is4GDataOnlyMode(ArrayList<PendingIntent> sentIntents, int subId,
+            Context context) {
+
+        if (context == null) {
+            Rlog.d(TAG, "is4GDataOnlyMode context = null");
+            return false;
+        }
+
+        Rlog.d(TAG, "is4GDataOnlyMode subId = " + subId);
+
+        boolean result = isAbleToSendSms(subId, context);
+        if (!result) {
+            notifyAppSendResult(sentIntents);
+            return true;
+        }
+
+        Rlog.d(TAG, "is4GDataOnlyMode default return false.");
+        return false;
+    }
+
+    protected boolean isAbleToSendSms(int subId, Context context){
+
+        LteDataOnlyController lteDataOnlyController = new LteDataOnlyController(context);
+        if (!lteDataOnlyController.checkPermission(subId)) {
+            Rlog.d(TAG, "is4GDataOnlyMode 4GDataOnly, skip CS operation!");
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Notify app of sending sms fail when 4G data only mode . Pure sim
+     * operation need not call this, such as reading sms
+     *
+     * @param sentIntents if not null, an ArrayList of
+     *  <code>PendingIntent</code>s (one for each message part) that
+     *  is broadcast when the corresponding message part has been
+     *  sent. The result code will be Activity.RESULT_OK for success,
+     *  or one of these errors:<br>
+     *  For <code>RESULT_ERROR_GENERIC_FAILURE</code> the sentIntent
+     *  may include the extra "errorCode" containing a radio
+     *  technology specific value, generally only useful for
+     *  troubleshooting.<br>
+     */
+    private void notifyAppSendResult(ArrayList<PendingIntent> sentIntents) {
+        Rlog.d(TAG, "notifyAppSendResult sentIntents = " + sentIntents);
+        if (sentIntents == null) {
+            Rlog.d(TAG, "notifyAppSendResult can not notify APP");
+            return;
+        }
+        try {
+            PendingIntent si = null;
+            int size = sentIntents.size();
+            for (int i = 0; i < size; i++) {
+                si = sentIntents.get(i);
+                if (si == null) {
+                    Rlog.d(TAG, "notifyAppSendResult can not notify APP for i = " + i);
+                } else {
+                    si.send(RESULT_ERROR_GENERIC_FAILURE);
+                }
+            }
+        } catch (CanceledException ex) {
+            Rlog.d(TAG, "notifyAppSendResult, CanceledException happened " +
+                    "when send sms fail with sentIntent");
+        }
+    }
+}

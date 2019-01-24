@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <array name="batterymeter_color_values">
+        <item>@*android:color/battery_saver_mode_color</item>
+        <item>#FFFFFFFF</item>
+    </array>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<virtualSpnOverridesByEfGid1 version="1">
+<virtualSpnOverride mccmncgid1="3022204B4F" name="Koodo SP"/>
+<virtualSpnOverride mccmncgid1="310040BA00140000000000" name="Mta"/>
+<virtualSpnOverride mccmncgid1="3102006D" name="MetroPCS 200"/>
+<virtualSpnOverride mccmncgid1="3106606D" name="MetroPCS 660"/>
+<virtualSpnOverride mccmncgid1="310900BA00180000000000" name="Midrivers"/>
+<virtualSpnOverride mccmncgid1="208014E" name="NRJMMS"/>
+<virtualSpnOverride mccmncgid1="4541801030000" name="SUN Mobile IMS"/>
+<virtualSpnOverride mccmncgid1="4541802020002" name="IMS"/>
+<virtualSpnOverride mccmncgid1="23430B3" name="BT MMS"/>
+<virtualSpnOverride mccmncgid1="2080152" name="VM MMS FR"/>
+<virtualSpnOverride mccmncgid1="23430B2" name="BT Onephone MMS"/>
+<virtualSpnOverride mccmncgid1="4541002020002" name="csl prepaid"/>
+<virtualSpnOverride mccmncgid1="23415B3" name="BT Mobile"/>
+<virtualSpnOverride mccmncgid1="4541002020001" name="csl prepaid"/>
+<virtualSpnOverride mccmncgid1="2341085" name="O2 Pay &amp; Go"/>
+<virtualSpnOverride mccmncgid1="4540201010000" name="1O1O IMS"/>
+<virtualSpnOverride mccmncgid1="3022205455" name="TELUS ISP"/>
+<virtualSpnOverride mccmncgid1="3102506D" name="MetroPCS 250"/>
+<virtualSpnOverride mccmncgid1="4541801010000" name="1O1O IMS"/>
+<virtualSpnOverride mccmncgid1="302720BA" name="Tbaytel Internet"/>
+<virtualSpnOverride mccmncgid1="312040BA00090000000000" name="Custer"/>
+<virtualSpnOverride mccmncgid1="310410deff" name="reseller"/>
+<virtualSpnOverride mccmncgid1="4540001020000" name="csl IMS"/>
+<virtualSpnOverride mccmncgid1="3103106D" name="MetroPCS 310"/>
+<virtualSpnOverride mccmncgid1="2081012" name="Coriolis MMS"/>
+<virtualSpnOverride mccmncgid1="302370DD" name="Fido Internet"/>
+<virtualSpnOverride mccmncgid1="23408B2" name="BT Onephone MMS"/>
+<virtualSpnOverride mccmncgid1="310260ddff" name="TFWAP"/>
+<virtualSpnOverride mccmncgid1="310360BA00020000000000" name="Pioneer"/>
+<virtualSpnOverride mccmncgid1="2341067" name="O2 Pay &amp; Go"/>
+<virtualSpnOverride mccmncgid1="20601B6" name="Internet"/>
+<virtualSpnOverride mccmncgid1="311350BA00160000000000" name="Nemont"/>
+<virtualSpnOverride mccmncgid1="3102606D" name="MetroPCS"/>
+<virtualSpnOverride mccmncgid1="3022205043" name="Mobile Internet"/>
+<virtualSpnOverride mccmncgid1="234200305" name="iD"/>
+<virtualSpnOverride mccmncgid1="3105906D" name="MetroPCS 590"/>
+<virtualSpnOverride mccmncgid1="2082352" name="Virgin mobile"/>
+<virtualSpnOverride mccmncgid1="312160BA00130000000000" name="chatmobility"/>
+<virtualSpnOverride mccmncgid1="311610BA00100000000000" name="Srtcomm"/>
+<virtualSpnOverride mccmncgid1="4540001030000" name="SUN Mobile IMS"/>
+<virtualSpnOverride mccmncgid1="4540201020000" name="csl IMS"/>
+<virtualSpnOverride mccmncgid1="2341061" name="O2 Pay &amp; Go"/>
+<virtualSpnOverride mccmncgid1="3102306D" name="MetroPCS 230"/>
+<virtualSpnOverride mccmncgid1="310410ddff" name="reseller"/>
+<virtualSpnOverride mccmncgid1="311420BA00150000000000" name="Northwestcell"/>
+<virtualSpnOverride mccmncgid1="4540002030001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="20404BAE0000000000000" name="Verizon Roaming Internet"/>
+<virtualSpnOverride mccmncgid1="310930BA00170000000000" name="Copper Valley"/>
+<virtualSpnOverride mccmncgid1="4540202020002" name="IMS"/>
+<virtualSpnOverride mccmncgid1="4541802020001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="4540202020001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="310260deff" name="TFWAP"/>
+<virtualSpnOverride mccmncgid1="4541801040000" name="IMS"/>
+<virtualSpnOverride mccmncgid1="4540201040000" name="IMS"/>
+<virtualSpnOverride mccmncgid1="330110ddff" name="Tracfone"/>
+<virtualSpnOverride mccmncgid1="311350BA00220000000000" name="Triangle"/>
+<virtualSpnOverride mccmncgid1="4541002030001" name="csl prepaid"/>
+<virtualSpnOverride mccmncgid1="208264E" name="NRJMMS"/>
+<virtualSpnOverride mccmncgid1="3102406D" name="MetroPCS 240"/>
+<virtualSpnOverride mccmncgid1="3022204D4F" name="Mobile Internet"/>
+<virtualSpnOverride mccmncgid1="310260534D" name="SIMPLE"/>
+<virtualSpnOverride mccmncgid1="2046550" name="AGMS NL"/>
+<virtualSpnOverride mccmncgid1="310750BA00120000000000" name="Appalachian"/>
+<virtualSpnOverride mccmncgid1="3103006D" name="MetroPCS 300"/>
+<virtualSpnOverride mccmncgid1="4541801020000" name="csl IMS"/>
+<virtualSpnOverride mccmncgid1="2081044" name="Darty surf&amp;Mails"/>
+<virtualSpnOverride mccmncgid1="3105306D" name="MetroPCS 530"/>
+<virtualSpnOverride mccmncgid1="4541802030001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="3102106D" name="MetroPCS 210"/>
+<virtualSpnOverride mccmncgid1="310600BA00040000000000" name="Cellcom"/>
+<virtualSpnOverride mccmncgid1="208104C" name="La Poste Mobile Modem"/>
+<virtualSpnOverride mccmncgid1="208104E" name="NRJMMS"/>
+<virtualSpnOverride mccmncgid1="31038050FF" name="AGMS Global"/>
+<virtualSpnOverride mccmncgid1="310960BA00110000000000" name="strata"/>
+<virtualSpnOverride mccmncgid1="3102602AC9" name="Consumer Cellular"/>
+<virtualSpnOverride mccmncgid1="204045A" name="SaskTel"/>
+<virtualSpnOverride mccmncgid1="3108006D" name="MetroPCS 800"/>
+<virtualSpnOverride mccmncgid1="311050BA00050000000000" name="Thumbcellular"/>
+<virtualSpnOverride mccmncgid1="2081053" name="Modem Joe"/>
+<virtualSpnOverride mccmncgid1="4540001010000" name="1O1O IMS"/>
+<virtualSpnOverride mccmncgid1="311920BA00070000000000" name="Chariton valley"/>
+<virtualSpnOverride mccmncgid1="330110deff" name="Tracfone"/>
+<virtualSpnOverride mccmncgid1="4540001040000" name="IMS"/>
+<virtualSpnOverride mccmncgid1="3102206D" name="MetroPCS 220"/>
+<virtualSpnOverride mccmncgid1="30222150" name="PC mobile"/>
+<virtualSpnOverride mccmncgid1="3101606D" name="MetroPCS 160"/>
+<virtualSpnOverride mccmncgid1="3106406D" name="MetroPCS 640"/>
+<virtualSpnOverride mccmncgid1="311140BA00030000000000" name="Sprocket"/>
+<virtualSpnOverride mccmncgid1="3104906D" name="MetroPCS 490"/>
+<virtualSpnOverride mccmncgid1="4540201030000" name="SUN Mobile IMS"/>
+<virtualSpnOverride mccmncgid1="2080133" name="MMS Carrefour"/>
+<virtualSpnOverride mccmncgid1="311440BA00010000000000" name="Bluegrass"/>
+<virtualSpnOverride mccmncgid1="3022214B" name="Koodo"/>
+<virtualSpnOverride mccmncgid1="22201FFFFFF0000FFFFFFFF" name="MMS WIND"/>
+<virtualSpnOverride mccmncgid1="2341099" name="O2 Pay &amp; Go"/>
+<virtualSpnOverride mccmncgid1="4540202030001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="31041060FF" name="reseller"/>
+<virtualSpnOverride mccmncgid1="23430C3" name="BT MMS"/>
+<virtualSpnOverride mccmncgid1="23476C1" name="BT MMS"/>
+<virtualSpnOverride mccmncgid1="3104102AC9" name="reseller"/>
+<virtualSpnOverride mccmncgid1="3102706D" name="MetroPCS 270"/>
+<virtualSpnOverride mccmncgid1="22288FFFFFF0000FFFFFFFF" name="MMS WIND"/>
+<virtualSpnOverride mccmncgid1="4540002020001" name="IMS"/>
+<virtualSpnOverride mccmncgid1="4540002020002" name="IMS"/>
+</virtualSpnOverridesByEfGid1>

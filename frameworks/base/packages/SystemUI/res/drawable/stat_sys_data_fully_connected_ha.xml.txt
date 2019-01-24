@@ -1,0 +1,33 @@
+<!--
+ Copyright (C) 2014 MediaTek Inc.
+   Modification based on code covered by the mentioned copyright$
+   and/or permission notice(s).
+
+ Copyright (C) 2014 The Android Open Source Project
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!--jiangyingying@wind-mobi.com Feature#148788 add for network icon H+ 2016.12.28 start-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="17dp"
+    android:viewportWidth="14.667"
+    android:viewportHeight="24">
+   <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6.000000,11.000000L4.400000,11.000000L4.400000,7.500000L1.700000,7.500000L1.700000,11.000000L0.000000,11.000000L0.000000,2.500000l1.700000,0.000000l0.000000,3.700000l2.700000,0.000000L4.400000,2.500000L6.000000,2.500000L6.000000,11.000000z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 12.415 4.231 L 12.415 2.281 L 11.315 2.281 L 11.315 4.231 L 9.368 4.231 L 9.368 5.332 L 11.315 5.332 L 11.315 7.281 L 12.415 7.281 L 12.415 5.332 L 14.368 5.332 L 14.368 4.231 Z" />
+</vector>
+<!--jiangyingying@wind-mobi.com Feature#148788 add for network icon H+ 2016.12.28 end-->

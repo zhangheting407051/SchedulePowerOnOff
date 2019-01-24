@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">Hostitel MTP</string>
+    <string name="downloads_app_label">Stahování</string>
+    <string name="root_name"><xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g> <xliff:g example="Internal Storage" id="storage_name">%2$s</xliff:g></string>
+    <string name="accessing_notification_title">Přístup k souborům z <xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g></string>
+    <string name="error_busy_device">Druhé zařízení je zaneprázdněno. Nelze přenést soubory, dokud nebude dostupné.</string>
+    <string name="error_locked_device">Nenalezeny žádné soubory. Zařízení může být uzamčeno. Pokud ano, odemkněte ho a zkuste znovu.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

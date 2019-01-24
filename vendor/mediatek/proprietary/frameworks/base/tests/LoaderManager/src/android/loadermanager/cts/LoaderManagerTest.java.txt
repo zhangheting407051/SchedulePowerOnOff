@@ -1,0 +1,54 @@
+package android.loadermanager.cts;
+
+import android.app.ListFragment;
+import android.database.Cursor;
+import android.test.ActivityInstrumentationTestCase2;
+import android.util.Log;
+import android.widget.Adapter;
+import android.widget.CursorAdapter;
+import android.widget.ListAdapter;
+
+import com.mediatek.cts.loadermanager.R;
+
+public class LoaderManagerTest extends ActivityInstrumentationTestCase2<MainActivity> {
+
+    public static String TAG = "LoaderManagerTest";
+    private MainActivity mActivity;
+
+    public LoaderManagerTest() {
+        super(MainActivity.class);
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        mActivity = getActivity();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    public void testActivity() throws InterruptedException {
+        Thread.sleep(5000);
+        CursorLoaderListFragment listFragment = (CursorLoaderListFragment) mActivity
+                .getFragmentManager().findFragmentById(R.id.fragment_list);
+        ListAdapter adapter = listFragment.getListView().getAdapter();
+        if (adapter == null) {
+            Thread.sleep(5000);
+        }
+        assertNotNull("Could not search cursorAdapter", adapter);
+
+        Cursor cursor = mActivity.getContentResolver().query(listFragment.mBaseUri,
+                listFragment.CONTACTS_SUMMARY_PROJECTION, listFragment.mSelect, null,
+                listFragment.mOrder);
+
+        if (cursor != null) {
+            Log.d(TAG, "cursor.getCount() : " + cursor.getCount() + ", adapter.getCount() : "
+                    + adapter.getCount());
+            assertEquals(cursor.getCount(), adapter.getCount());
+            cursor.close();
+        }
+    }
+}

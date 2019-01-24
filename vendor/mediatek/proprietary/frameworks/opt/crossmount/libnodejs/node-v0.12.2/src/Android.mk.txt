@@ -1,0 +1,99 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libnode
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_CFLAGS := -DNODE_WANT_INTERNALS \
+            -DEV_EMBED_ENABLE=0 \
+            -DX_STACKSIZE=65536 \
+            -DHAVE_FDATASYNC=0 \
+            -D__POSIX__=1 \
+            -DHAVE_MONOTONIC_CLOCK=1 \
+            -DPLATFORM=\"android\" \
+            -DARCH=\"arm\" \
+            -D_LARGEFILE_SOURCE \
+            -D_FILE_OFFSET_BITS=64 \
+            -D_FORTIFY_SOURCE=2 \
+            -DHAVE_CONFIG_H=1 \
+            -DHAVE_OPENSSL=1 \
+            -DANDROID \
+            -Wno-error=return-type \
+            -fPIC
+
+# -DEV_FORK_ENABLE=0
+
+LOCAL_SRC_FILES := \
+    async-wrap.cc \
+    fs_event_wrap.cc \
+    cares_wrap.cc \
+    handle_wrap.cc \
+    node.cc \
+    node_buffer.cc \
+    node_constants.cc \
+    node_contextify.cc \
+    node_file.cc \
+    node_http_parser.cc \
+    node_javascript.cc \
+    node_main.cc \
+    node_os.cc \
+    node_v8.cc \
+    node_stat_watcher.cc \
+    node_watchdog.cc \
+    node_zlib.cc \
+    node_i18n.cc \
+    pipe_wrap.cc \
+    signal_wrap.cc \
+    smalloc.cc \
+    spawn_sync.cc \
+    string_bytes.cc \
+    stream_wrap.cc \
+    tcp_wrap.cc \
+    timer_wrap.cc \
+    tty_wrap.cc \
+    process_wrap.cc \
+    udp_wrap.cc \
+    uv.cc \
+    util.cc \
+    node_crypto.cc \
+    node_crypto_bio.cc \
+    node_crypto_clienthello.cc \
+    tls_wrap.cc
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/. \
+    $(LOCAL_PATH)/../deps/debugger-agent/include/. \
+    $(LOCAL_PATH)/../deps/v8/include/. \
+    $(LOCAL_PATH)/../deps/http_parser/. \
+    $(LOCAL_PATH)/../deps/uv/src/. \
+    $(LOCAL_PATH)/../deps/uv/src/ares/. \
+    $(LOCAL_PATH)/../deps/uv/src/unix/. \
+    $(LOCAL_PATH)/../deps/uv/include/. \
+    $(LOCAL_PATH)/../deps/cares/include/. \
+    $(LOCAL_PATH)/../deps/zlib/. \
+    $(LOCAL_PATH)/../deps/openssl/. \
+    $(LOCAL_PATH)/../deps/openssl/include/. 
+    
+#    $(LOCAL_PATH)/../../../openssl/include/openssl/. \
+    $(LOCAL_PATH)/../../../openssl/include/.
+
+#$(LOCAL_PATH)/../../../../system/core/include/android/log.h
+
+#$(LOCAL_PATH)/../deps/openssl/include/.
+
+#$(LOCAL_PATH)/../deps/openssl/openssl/include/.
+
+LOCAL_CPP_EXTENSION := .cc
+
+#LOCAL_LDLIBS    := -lz
+#LOCAL_LDLIBS    := -L$(SYSROOT)/usr/lib -llog
+
+LOCAL_SHARED_LIBRARIES += liblog
+
+include $(MTK_STATIC_LIBRARY)
+
+endif

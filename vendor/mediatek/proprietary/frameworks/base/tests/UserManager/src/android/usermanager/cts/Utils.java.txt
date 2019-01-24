@@ -1,0 +1,57 @@
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.usermanager.cts;
+
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Environment;
+import android.os.UserManager;
+import android.util.Log;
+
+/** Utility class for Test {@link UserManager} functionality. */
+public class Utils {
+    private Context mContext;
+
+    public Utils(Context context){
+        mContext = context;
+    }
+
+    public boolean isSupportMultiUser() {
+        ActivityManager localActivityManager;
+        ActivityManager.MemoryInfo localMemoryInfo;
+        localActivityManager = (ActivityManager) mContext.getSystemService("activity");
+        localMemoryInfo = new ActivityManager.MemoryInfo();
+        localActivityManager.getMemoryInfo(localMemoryInfo);
+        boolean isSharedSd = Environment.isExternalStorageEmulated();
+        long memory = localMemoryInfo.totalMem;
+        boolean isLow = localActivityManager.isLowRamDevice();
+        int maxUserCount = UserManager.getMaxSupportedUsers();
+        Log.d(UserManagerTest.TAG, "memory : " + memory + ", isLow: " + isLow + ", isSharedSd: "
+                + isSharedSd);
+        if ((memory > 1073741824L) && !isLow && (maxUserCount > 1)) {
+            return true;
+        }
+        return false;
+    }
+    public boolean isSupportManagedUsers() {
+        PackageManager pm = mContext.getPackageManager();
+        boolean hasManagerUser = pm.hasSystemFeature("android.software.managed_users");
+        Log.d(UserManagerTest.TAG, " hasManagedUsers: " + hasManagerUser);
+        return hasManagerUser;
+    }
+}

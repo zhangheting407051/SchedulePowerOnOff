@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">Хост MTP</string>
+    <string name="downloads_app_label">Загрузки</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Осуществляется доступ к файлам на &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt;.</string>
+    <string name="error_busy_device">Второе устройство занято. Чтобы передать файлы, подождите, пока устройство будет доступно.</string>
+    <string name="error_locked_device">Файлы не найдены. Возможно, второе устройство заблокировано. Если это так, разблокируйте устройство и попробуйте еще раз.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

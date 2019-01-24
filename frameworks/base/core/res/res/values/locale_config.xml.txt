@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2015 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+    <string-array translatable="false" name="supported_locales">
+        <!-- fankaijian@wind-mobi.com 20170407 start-->
+        <item>ar-AE</item> <!-- Arabic (United Arab Emirates) -->
+        <item>ar-BH</item> <!-- Arabic (Bahrain) -->
+        <item>ar-DZ</item> <!-- Arabic (Algeria) -->
+        <item>ar-EG</item> <!-- Arabic (Egypt) -->
+        <item>ar-IQ</item> <!-- Arabic (Iraq) -->
+        <item>ar-JO</item> <!-- Arabic (Jordan) -->
+        <item>ar-KW</item> <!-- Arabic (Kuwait) -->
+        <item>ar-LB</item> <!-- Arabic (Lebanon) -->
+        <item>ar-LY</item> <!-- Arabic (Libya) -->
+        <item>ar-MA</item> <!-- Arabic (Morocco) -->
+        <item>ar-OM</item> <!-- Arabic (Oman) -->
+        <item>ar-QA</item> <!-- Arabic (Qatar) -->
+        <item>ar-SA</item> <!-- Arabic (Saudi Arabia) -->
+        <item>ar-TN</item> <!-- Arabic (Tunisia) -->
+        <item>ar-YE</item> <!-- Arabic (Yemen) -->
+        <item>bg-BG</item> <!-- Bulgarian (Bulgaria) -->
+        <item>bn-BD</item> <!-- Bengali (Bangladesh) -->
+        <item>cs-CZ</item> <!-- Czech (Czech Republic) -->
+        <item>da-DK</item> <!-- Danish (Denmark) -->
+        <item>de-DE</item> <!-- German (Germany) -->
+        <item>el-CY</item> <!-- Greek (Cyprus) -->
+        <item>el-GR</item> <!-- Greek (Greece) -->
+        <item>en-AU</item> <!-- English (Australia) -->
+        <item>en-AL</item> <!-- English (Albania) -->
+        <item>en-BW</item> <!-- English (Botswana) -->
+        <item>en-CY</item> <!-- English (Cyprus) -->
+        <item>en-ET</item> <!-- English (Ethiopia) -->
+        <!-- yuanzhiqiang@wind-mobi.com add  2017-03-29 add english in ZG start-->
+        <item>en-EZ</item><!-- English (Zawgyi) -->
+        <!-- yuanzhiqiang@wind-mobi.com add  2017-03-29 end-->
+        <item>en-GB</item> <!-- English (United Kingdom) -->
+        <item>en-GR</item> <!-- English (Greece) -->
+        <item>en-GH</item> <!-- English (Ghana) -->
+        <item>en-IE</item> <!-- English (Ireland) -->
+        <item>en-IN</item> <!-- English (India) -->
+        <item>en-KE</item> <!-- English (Kenya) -->
+        <item>en-ME</item> <!-- English (Montenegro) -->
+        <item>en-NA</item> <!-- English (Namibia) -->
+        <item>en-NP</item> <!-- English (Nepal) -->
+        <item>en-NG</item> <!-- English (Nigeria) -->
+        <item>en-NZ</item> <!-- English (New Zealand) -->
+        <item>en-PH</item> <!-- English (Philippines) -->
+        <item>en-PK</item> <!-- English (Pakistan) -->
+        <item>en-SG</item> <!-- English (Singapore) -->
+        <item>en-TZ</item> <!-- English (Tanzania) -->
+        <item>en-UG</item> <!-- English (Uganda) -->
+        <item>en-US</item> <!-- English (United States) -->
+        <item>en-XK</item> <!-- English (Kosovo) -->
+        <item>en-ZA</item> <!-- English (South Africa) -->
+        <!-- yuanzhiqiang@wind-mobi.com add  2017-03-29 add english in ZG start-->
+        <item>en-ZG</item> <!-- English (Zawgyi) -->
+        <!-- yuanzhiqiang@wind-mobi.com add  2017-03-29 end-->
+        <item>en-ZM</item> <!-- English (Zambia) -->
+        <item>en-ZW</item> <!-- English (Zimbabwe) -->
+        <item>es-ES</item> <!-- Spanish (Spain) -->
+        <item>es-US</item> <!-- Spanish (United States) -->
+        <item>et-EE</item> <!-- Estonian (Estonia) -->
+        <item>fa-AF</item> <!-- Persian (Afghanistan) -->
+        <item>fa-IR</item> <!-- Persian (Iran) -->
+        <item>fi-FI</item> <!-- Finnish (Finland) -->
+        <item>fr-CA</item> <!-- French (Canada) -->
+        <item>fr-FR</item> <!-- French (France) -->
+        <item>fil-PH</item> <!-- Filipino (Philippines) -->
+        <item>gu-IN</item> <!-- Gujarati (India) -->
+        <item>hi-IN</item> <!-- Hindi (India) -->
+        <item>hr-BA</item> <!-- Croatian (Bosnia & Herzegovina) -->
+        <item>hr-HR</item> <!-- Croatian (Croatia) -->
+        <item>hu-HU</item> <!-- Hungarian (Hungary) -->
+        <item>iw-IL</item> <!-- Hebrew (Israel) -->
+        <item>in-ID</item> <!-- Indonesian (Indonesia) -->
+        <item>it-IT</item> <!-- Italian (Italy) -->
+        <item>ja-JP</item> <!-- Japanese (Japan) -->
+        <item>km-LA</item> <!-- Khmer (Laos) -->
+        <item>ko-KP</item> <!-- Korean (North Korea) -->
+        <item>ko-KR</item> <!-- Korean (South Korea) -->
+        <item>km-KH</item> <!-- Khmer (Cambodia) -->
+        <item>kn-IN</item> <!-- Kannada (India) -->
+        <item>lt-LT</item> <!-- Lithuanian (Lithuania) -->
+        <item>lv-LV</item> <!-- Latvian (Latvia) -->
+        <item>mk-MK</item> <!-- Macedonian (Macedonia (FYROM)) -->
+        <item>ml-IN</item> <!-- Malayalam (India) -->
+        <item>ms-MY</item> <!-- Malay (Malaysia) -->
+        <item>my-MM</item> <!-- Burmese (Myanmar (Burma)) -->
+        <item>mr-IN</item> <!-- Marathi (India) -->
+        <item>nb-NO</item> <!-- Norwegian Bokmål (Norway) -->
+        <item>nl-BE</item> <!-- Dutch (Belgium) -->
+        <item>nl-NL</item> <!-- Dutch (Netherlands) -->
+        <item>pa_IN</item> <!-- Panjabi (India)-->
+        <item>pl-PL</item> <!-- Polish (Poland) -->
+        <item>pt-AO</item> <!-- Portuguese (Angola) -->
+        <item>pt-BR</item> <!-- Portuguese (Brazil) -->
+        <item>pt-MZ</item> <!-- Portuguese (Mozambique) -->
+        <item>pt-PT</item> <!-- Portuguese (Portugal) -->
+        <item>ro-RO</item> <!-- Romanian (Romania) -->
+        <item>ru-RU</item> <!-- Russian (Russia) -->
+        <item>si-LK</item> <!-- Sinhala (Sri Lanka) -->
+        <item>sk-SK</item> <!-- Slovak (Slovakia) -->
+        <item>sl-SI</item> <!-- Slovenian (Slovenia) -->
+        <item>sr-Cyrl-RS</item> <!-- Serbian (Cyrillic,Serbia) -->
+        <item>sv-SE</item> <!-- Swedish (Sweden) -->
+        <item>ta-IN</item> <!-- Tamil (India) -->
+        <item>th-TH</item> <!-- Thai (Thailand) -->
+        <item>te-IN</item> <!-- Telugu (India) -->
+        <item>tr-TR</item> <!-- Turkish (Turkey) -->
+        <item>tl-PH</item> <!-- Filipino -->
+        <item>uk-AM</item> <!-- Ukrainian (Armenia) -->
+        <item>uk-BY</item> <!-- Ukrainian (Belarus) -->
+        <item>uk-GE</item> <!-- Ukrainian (Georgia) -->
+        <item>uk-UA</item> <!-- Ukrainian (Ukraine) -->
+        <item>uk-MD</item> <!-- Ukrainian (Moldova) -->
+        <item>ur-PK</item> <!-- Urdu (Pakistan) -->
+        <item>vi-VN</item> <!-- Vietnamese (Vietnam) -->
+        <item>zh-Hans-CN</item> <!-- Chinese (Simplified Han,China) -->
+        <item>zh-Hant-HK</item> <!-- Chinese (Traditional Han,Hong Kong) -->
+        <item>zh-Hant-TW</item> <!-- Chinese (Traditional Han,Taiwan) -->
+        <!-- fankaijian@wind-mobi.com 20170407 end-->
+    </string-array>
+</resources>

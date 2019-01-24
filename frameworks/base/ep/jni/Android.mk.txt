@@ -1,0 +1,23 @@
+#fengsong add for SIM LOCK start
+LOCAL_PATH:= $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE_TAGS := optional
+
+LOCAL_SRC_FILES := \
+	com_wind_Encryptor.cpp
+
+LOCAL_C_INCLUDES := \
+    $(JNI_H_INCLUDE) 
+
+LOCAL_SHARED_LIBRARIES := \
+	libnativehelper \
+	libcutils
+
+LOCAL_MODULE := libep_jni
+
+LOCAL_PRELINK_MODULE := false
+
+include $(BUILD_SHARED_LIBRARY)
+
+#fengsong add for SIM LOCK end

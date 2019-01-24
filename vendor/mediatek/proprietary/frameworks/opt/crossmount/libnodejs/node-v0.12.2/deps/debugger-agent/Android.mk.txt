@@ -1,0 +1,29 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libdebugger_agent
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_CFLAGS := -DDEBUG
+
+LOCAL_SRC_FILES := \
+    src/agent.cc
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/include/. \
+    $(LOCAL_PATH)/src/. \
+    $(LOCAL_PATH)/../v8/include/. \
+    $(LOCAL_PATH)/../uv/include/. \
+    $(LOCAL_PATH)/../cares/include/. \
+    $(LOCAL_PATH)/../../src/. 
+
+
+LOCAL_CPP_EXTENSION := .cc
+
+include $(MTK_STATIC_LIBRARY)
+
+endif

@@ -1,0 +1,49 @@
+/*
+********************************************
+******fengsong add for SIM LOCK start*******
+********************************************
+*/
+
+
+package android.encryptor;
+import android.os.SystemProperties;
+import android.util.Log;
+import android.options.wind.WindFeatureOptions;
+
+/**
+ * @author dingfangming
+ *
+ * encryption for SIM-ME lock use
+ * 
+ */
+public class Encryptor {
+
+//	private static Encryptor sInstance = new Encryptor();
+	
+	public Encryptor() {
+		System.loadLibrary("ep_jni");
+	}
+
+    public static String windEncrypt(String srcStr) {
+        //chusuxia@wind-mobi.com 20160714 add start
+        Log.v("Encryptor", "Unlock digits is: " + WindFeatureOptions.WIND_UNLOCK_DIGITS);
+        if(WindFeatureOptions.WIND_UNLOCK_DIGITS.equals("16")) {
+            Log.v("Encryptor", "encrypt_newmodel");
+            return native_encryptnewmodel(srcStr);
+        }
+        //chusuxia@wind-mobi.com 20160714 add end
+        return native_encrypt(srcStr);
+    }
+
+	private static native String native_encrypt(String srcStr);
+    //chusuxia@wind-mobi.com 20160714 add start   
+    private static native String native_encryptnewmodel(String srcStr);
+    //chusuxia@wind-mobi.com 20160714 add end
+	
+}
+
+/*
+********************************************
+*******fengsong add for SIM LOCK end********
+********************************************
+*/

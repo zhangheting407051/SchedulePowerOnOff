@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32"
+	android:tint="@*android:color/decor_button_light_color"
+	>
+	
+    <group android:scaleX="0.75"
+            android:scaleY="0.75"
+            android:translateX="8.0"
+            android:translateY="5.0" >
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20.146,8.925c-0.305,0.361-0.835,0.671-1.507,0.898l0.138,3.757
+l5.719,6.147H7.504l5.718-6.147l0.138-3.757c-0.672-0.228-1.203-0.537-1.507-0.898c-1.656-0.442-2.731-1.139-2.731-1.927
+c0-1.336,3.079-2.419,6.877-2.419c3.798,0,6.877,1.083,6.877,2.419C22.877,7.786,21.803,8.483,20.146,8.925z
+M16.404,29.576 l-1.512-9.09h2.955L16.404,29.576z" />
+</group>
+</vector>

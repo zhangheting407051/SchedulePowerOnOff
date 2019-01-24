@@ -1,0 +1,82 @@
+package com.mediatek.crossmount.adapter;
+
+import android.content.Context;
+
+import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.util.Log;
+
+/**
+ * Represents the engineer mode adapter.
+ * @hide
+ * <p>
+ * This class provides the interface for engineer mode.
+ * </p>
+ */
+public final class CrossMountEMAdapter{
+    static final String TAG = "CrossMountEMAdapter";
+
+    static final String CROSSMOUNT_MANAGER_SERVICE = "CrossMountManagerService";
+
+    // service link
+    private ICrossMountAdapter mService;
+    private final Context mContext;
+
+    public enum Action {
+        GET,
+        SET
+    }
+
+    public enum Param {
+        CAMERA_SERVICE,     // 0
+        SPEAKER_SERVICE,    // 1
+        MIC_SERVICE,        // 2
+        TOUCHSENSOR_SERVICE,// 3
+        SW_SERVICE,         // 4
+        DIFF_MOUNT_CONCURRENCY, // 5
+        CAMERA_RESOLUTION,      // 6
+        CONNECTION_PANEL,       // 7
+        SET_AS_TV,               // 8
+        SUPPORTED_SENSOR          //9
+    }
+
+
+    public CrossMountEMAdapter(Context context) {
+        Log.d(TAG, "CrossMountEMAdapter constructor");
+
+        //Save the application context
+        mContext = context;
+
+        IBinder binder = ServiceManager.getService(CROSSMOUNT_MANAGER_SERVICE);
+        if (binder == null){
+            Log.e(TAG, "binder is null !");
+            return;
+        }
+
+        mService = ICrossMountAdapter.Stub.asInterface(binder);
+
+        if (mService == null) {
+            Log.e(TAG, "mService is null !");
+            return;
+        }
+    }
+
+
+    /**
+     * Sync paramter
+     * @hide
+     * <p>
+     * Sync (get or set) parameter to CrossMount framework
+     */
+    public int syncParam(Action action, Param param, int value){
+        try {
+            return mService.syncParam(action.ordinal(), param.ordinal(), value);
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException !");
+            return 0;
+        }
+    }
+
+}

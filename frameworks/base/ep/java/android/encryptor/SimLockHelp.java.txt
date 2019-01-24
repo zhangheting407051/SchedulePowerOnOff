@@ -1,0 +1,132 @@
+/*
+***********************************************************
+******chusuxia@wind-mobi.com add for SIM LOCK start*******
+***********************************************************
+*/
+package android.encryptor;
+import android.os.SystemProperties;
+
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+
+/**
+ * Created by chusuxia on 2017/4/1.
+ */
+public class SimLockHelp {
+    public static final String SML_UNLOCK_STATE="UNLOCK";
+    public static final String SML_UNLOCKED_STATE="UNLOCKED";
+    public static final String SML_AUTOLOK_STATE="AUTOLOCK";
+    private static final String simlock_state_data = "/protect_f/simlock_state_data";
+    private static final String simlock_default_counts = "/protect_f/simlock_default_counts";
+    private static final String simlock_left_counts = "/protect_f/simlock_left_counts";
+    public static int  SMLCOUNT_FAIL = -1;
+
+    public static void setDefaultCount(int count){
+        setSimLockCount(count,simlock_default_counts);
+    }
+
+    public static void setRetryCount(int count){
+        setSimLockCount(count,simlock_left_counts);
+    }
+
+    public static int getRetryCount(){
+        return getSimLockCount(simlock_left_counts);
+    }
+
+    public static int getDefaultCount(){
+        return getSimLockCount(simlock_default_counts);
+    }
+
+    private static void setSimLockCount(int count, String filename ) {
+        DataOutputStream dos;
+        try {
+            File file= new File(filename);
+            if( !file.exists()){
+                file.createNewFile();
+            }
+            dos = new DataOutputStream( new FileOutputStream(filename));
+            dos.writeInt(count);
+            dos.flush();
+            dos.close();
+            if (simlock_left_counts.equals(filename)) {
+                SystemProperties.set("persist.sys.smlretry", count+"");
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static boolean isRetryCoutFileExists(){
+        return IsSmlCountFileExists(simlock_left_counts) && IsSmlCountFileExists(simlock_default_counts);
+    }
+
+    private static boolean IsSmlCountFileExists(String filename) {
+        File file  = new File(filename);
+        if( file.exists()) {
+            return true;
+        }
+        return false;
+    }
+
+    private static int getSimLockCount(String filename) {
+        DataInputStream dis;
+        try {
+            dis = new DataInputStream(new  FileInputStream(filename));
+            int count = dis.readInt();
+            dis.close();
+            return  count;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return SMLCOUNT_FAIL;
+    }
+
+    public static void setSimLockState(String data) {
+        FileOutputStream os;
+        try {
+            os = new FileOutputStream(simlock_state_data);
+            os.write(data.getBytes());
+            os.flush();
+            os.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static String getSimLockState() {
+        FileInputStream is;
+        byte[] buff = new byte[1023];
+        try {
+            is = new FileInputStream(simlock_state_data);
+            int count = is.read(buff);
+            is.close();
+
+            if (count > 0) {
+                String state = new String(buff, 0, count);
+                return state;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+}
+
+/*
+***********************************************************
+******chusuxia@wind-mobi.com add for SIM LOCK end*******
+***********************************************************
+*/

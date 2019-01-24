@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<apns version="8">
+    <apn carrier="Cosmote Wireless Internet"
+         mcc="202"
+         mnc="01"
+         apn="internet"
+         type="default,supl"
+    />
+    <apn carrier="Cosmote Mms"
+         mcc="202"
+         mnc="01"
+         apn="mms"
+         type="mms"
+         mmsc="http://mmsc.cosmote.gr:8002"
+         mmsproxy="10.10.10.20"
+         mmsport="8080"
+    />
+    <apn carrier="VF Internet"
+         mcc="202"
+         mnc="05"
+         apn="internet.vodafone.gr"
+         type="default,supl,agps,fota,dun"
+         authtype="0"
+         user="user"
+         password="pass"
+    />
+</apns>

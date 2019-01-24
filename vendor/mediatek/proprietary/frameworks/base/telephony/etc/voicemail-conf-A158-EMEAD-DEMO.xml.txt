@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gaoyuan@wind-mobi.com added for country code 20161212 begin -->
+<voicemail>
+        <voicemailCH numeric="46000" carrier="Claro" vmnumber="13800077" vmtag="Caixa Postal"/>
+        <voicemailAE numeric="46000" carrier="Telcel" vmnumber="138000070" vmtag="Buzn de Voz"/>
+</voicemail>
+<!-- gaoyuan@wind-mobi.com added for country code 20161212 end -->

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">Máy chủ MTP</string>
+    <string name="downloads_app_label">Tệp tải xuống</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Đang truy cập tệp từ &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt;</string>
+    <string name="error_busy_device">Thiết bị khác đang bận. Bạn không thể chuyển tệp cho đến khi thiết bị sẵn dùng.</string>
+    <string name="error_locked_device">Không tìm thấy tệp. Thiết bị khác có thể bị khóa. Nếu vậy, hãy mở khóa và thử lại.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

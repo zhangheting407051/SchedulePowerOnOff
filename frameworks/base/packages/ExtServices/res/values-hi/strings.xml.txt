@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Android सेवा लाइब्रेरी</string>
+    <string name="notification_ranker">Android सूचना श्रेणी सेवा</string>
+    <string name="notification_ranker_autobundle_explanation">श्रेणी सेवा द्वारा स्वतः समूहीकरण अपडेट किया गया</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

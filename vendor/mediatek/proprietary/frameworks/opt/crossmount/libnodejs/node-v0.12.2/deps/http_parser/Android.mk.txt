@@ -1,0 +1,21 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := libhttp_parser
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_CFLAGS := -DDEBUG \
+
+LOCAL_SRC_FILES := \
+    http_parser.c
+
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH)/.
+    
+include $(MTK_STATIC_LIBRARY)
+
+endif

@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/*
+** Copyright 2009, The Android Open Source Project
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
+**     http://www.apache.org/licenses/LICENSE-2.0
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
+** limitations under the License.
+*/
+-->
+
+<!-- These resources are around just to allow their values to be customized
+     for different hardware and product builds. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!-- The limit browser search:for cmcc case, user input string limit -->
+    <integer name="max_input_browser_search_limit">2000</integer>
+
+    <!-- CMCC MM package name-->
+    <string name="config_mm_package_name">com.aspire.mm</string>
+
+    <!-- default year for first power on-->
+    <integer name="default_restore_year">2015</integer>
+
+    <!-- Flag indicating whether ntp sync over mobile data connection -->
+    <bool name="config_ntp_by_mobile">false</bool>
+
+    <!-- Flag indicating wheteher captitial portal check is enabled for mobile data connection -->
+    <bool name="is_captive_over_mobile">false</bool>
+
+    <!-- Flag indicating wheteher wifi framework stop scan after screen off -->
+    <bool name="config_wifi_framework_stop_scan_after_screen_off_support">true</bool>
+
+    <!-- Integer indicating the delay in milliseconds for wifi framework stop scan after screen off, set to zero means no support-->
+    <integer name="config_wifi_framework_stop_scan_after_screen_off_delay">720000</integer>
+
+    <!-- Flag indicating wheteher wifi scanner screen on & connected back off scan enable -->
+    <bool name="config_wifi_scanner_backoff_scan_when_connected_support">true</bool>
+
+    <!-- Flag indicating wheteher wifi scanner screen on & connected back off scan check throughput enable -->
+    <bool name="config_wifi_scanner_backoff_scan_check_throughput_support">true</bool>
+
+    <!-- Flag indicating wheteher wifi framework enable IpReachabilityMonitor -->
+    <bool name="config_enable_ip_reachability_monitor">true</bool>
+
+    <!-- Flag indicating wheteher wifi framework enable IpReachabilityMonitor Enhancement-->
+    <bool name="config_enable_ip_reachability_monitor_enhancement">true</bool>
+
+    <!-- Wifi supports UTF8-like GBK encoding -->
+    <bool name="config_wifi_utf8_like_gbk_encoding">false</bool>
+
+    <!-- Flag indicating wheteher wifi supportes STA mode set frequency band -->
+    <bool name="config_wifi_sta_setband_support">false</bool>
+
+    <!-- Display toast time when Wifi Display quality is bad -->
+    <integer name="wfd_display_toast_time">20</integer>
+
+    <!-- Display notification time when Wifi Display quality is bad -->
+    <integer name="wfd_display_notification_time">60</integer>
+
+    <!--   Wifi display: default resolution -->
+    <!--     0: 720p,30fps (Menu is disabled)  -->
+    <!--     1: 1080p,30fps(Menu is disabled)  -->
+    <!--     2: 1080p,30fps(Menu is enabled)  -->
+    <!--     3: 720p,30fps (Menu is enabled) -->
+    <integer name="wfd_display_default_resolution">-1</integer>
+
+    <!-- Wifi display: gallery power saving option   -->
+    <!--   0: off -->
+    <!--   1: dim -->
+    <!--   2: no power saving -->
+    <integer name="wfd_display_power_saving_option">1</integer>
+
+    <!-- Wifi display: gallery power saving delay. The unit is second -->
+    <integer name="wfd_display_power_saving_delay">10</integer>
+
+    <!-- Wifi display: secure option -->
+    <!-- 0: TV shows black. -->
+    <!-- 1: TV shows prohibitted image -->
+    <integer name="wfd_display_secure_option">1</integer>
+
+    <!-- Flag indicating wheteher always enable mobile hotspot when it is plugged in to a wall socket, or to a computer, for charging -->
+    <bool name="is_mobile_hotspot_always_on_while_plugged">false</bool>
+
+    <!-- Flag indicating wheteher  -->
+    <bool name="is_mobile_provision_enabled">false</bool>
+
+    <!-- Skip network validation. In some environment like China can't connect to
+         http://clients3.google.com/generate_204    -->
+    <bool name="config_skip_network_validation">false</bool>
+
+    <!-- Safe headphone fm volume index. -->
+    <integer name="config_safe_fm_volume_index">12</integer>
+
+    <!-- PLMN list for DTAG dual APN -->
+    <string-array translatable="false" name="dtag_dual_apn_plmn_list">
+        <item>26201</item>
+        <item>21901</item>
+        <item>23203</item>
+        <item>22603</item>
+        <item>22606</item>
+        <item>20201</item>
+        <item>23001</item>
+    </string-array>
+
+    <!-- To support Mediatek AAL ultra dimming, all Android public interface accepts
+         virtual brightness values of backlight instead of physical values.
+         If all brightness configurations are also virtual values, set this flag to
+         true. Otherwise, they are traditional physical values and no conversion will
+         be performed.
+    -->
+    <bool name="config_screenBrightnessVirtualValues">false</bool>
+
+    <!-- Package name(s) containing Location Provider, which is
+         supported by LBS vendors. -->
+    <string-array name="config_cnLocationProviderPackageNames" translatable="false">
+        <item>com.baidu.map.location</item>
+    </string-array>
+
+    <!-- Operator list for supporting OMH -->
+    <string-array translatable="false" name="operator_support_omh_list">
+        <item>40589</item>
+        <item>40400</item>
+        <item>42103</item>
+    </string-array>
+
+     <!-- Intent names which are controlled by AutoBootControl for CTA spec.  -->
+    <string-array name="config_auto_boot_policy_intent_list" translatable="false">
+        <item>android.intent.action.BOOT_COMPLETED</item>
+        <item>android.intent.action.ACTION_BOOT_IPO</item>
+    </string-array>
+
+    <!-- Add by MTK: mtk optr mapping table in the form of
+         "start_mcc_mnc", "end mcc_mnc", "Optr number" -->
+    <string-array translatable="false" name="operator_map_list">
+        <!-- OP01 China-->
+        <item>46000, 46000, 01</item>
+        <item>46002, 46002, 01</item>
+        <item>46004, 46004, 01</item>
+        <item>46007, 46007, 01</item>
+        <item>46008, 46008, 01</item>
+        <item>46070, 46070, 01</item>
+
+        <!-- OP02 China-->
+        <item>46001, 46001, 02</item>
+        <item>46006, 46006, 02</item>
+
+        <!-- OP03 France-->
+        <item>20801, 20802, 03</item>
+        <item>20829, 20829, 03</item>
+        <item>20891, 20891, 03</item>
+        <!-- French Guiana-->
+        <item>34001, 34001, 03</item>
+        <!-- Spain-->
+        <item>21403, 21403, 03</item>
+        <item>21409, 21409, 03</item>
+        <item>21411, 21411, 03</item>
+        <!-- Egypt-orange-->
+        <item>60201, 60201, 03</item>
+
+        <!-- OP05 Germany-->
+        <item>26201, 26201, 05</item>
+        <item>26206, 26206, 05</item>
+        <!-- Poland-->
+        <item>26002, 26002, 05</item>
+        <item>26034, 26034, 05</item>
+
+        <!-- OP06 United Kingdom-->
+        <item>23415, 23415, 06</item>
+        <item>23427, 23427, 06</item>
+        <item>23491, 23491, 06</item>
+        <!-- Italy-->
+        <item>22206, 22206, 06</item>
+        <item>22210, 22210, 06</item>
+        <!-- Germany-->
+        <item>26202, 26202, 06</item>
+        <item>26204, 26204, 06</item>
+        <item>26209, 26209, 06</item>
+        <!-- Portugal-->
+        <item>26801, 26801, 06</item>
+        <!-- Spain-->
+        <item>21401, 21401, 06</item>
+        <item>21406, 21406, 06</item>
+        <!-- Turkey-->
+        <item>28602, 28602, 06</item>
+        <!-- NL, CZ, ZA, Egypt-->
+        <item>20404, 20404, 06</item>
+        <item>23003, 23003, 06</item>
+        <item>65501, 65501, 06</item>
+        <item>60202, 60202, 06</item>
+
+        <!-- OP07 United States, Maxico-->
+        <item>31030, 31030, 07</item>
+        <item>310070, 310070, 07</item>
+        <item>310090, 310090, 07</item>
+        <item>310680, 310680, 07</item>
+        <item>310150, 310150, 07</item>
+        <item>310170, 310170, 07</item>
+        <item>310280, 310280, 07</item>
+        <item>310380, 310380, 07</item>
+        <item>310410, 310410, 07</item>
+        <item>310560, 310560, 07</item>
+        <item>311180, 311180, 07</item>
+        <item>334050, 334050, 07</item>
+
+        <!-- OP08 United States-->
+        <item>310230, 310230, 08</item>
+        <item>31031, 31032, 08</item>
+        <item>310220, 310220, 08</item>
+        <item>310270, 310270, 08</item>
+        <item>310210, 310210, 08</item>
+        <item>310260, 310260, 08</item>
+        <item>310200, 310200, 08</item>
+        <item>310250, 310250, 08</item>
+        <item>310160, 310160, 08</item>
+        <item>310240, 310240, 08</item>
+        <item>310660, 310660, 08</item>
+        <item>310300, 310300, 08</item>
+        <item>310330, 310330, 08</item>
+        <item>310800, 310800, 08</item>
+        <item>310310, 310310, 08</item>
+        <item>310490, 310490, 08</item>
+        <item>310580, 310580, 08</item>
+
+        <!-- OP09 China-->
+        <item>46003, 46003, 09</item>
+        <item>46005, 46005, 09</item>
+        <item>46011, 46011, 09</item>
+        <!-- Macao China-->
+        <item>45502, 45502, 09</item>
+        <item>45507, 45507, 09</item>
+
+        <!-- OP10-->
+
+        <!-- OP11 United Kingdom -->
+        <item>23420, 23420, 11</item>
+        <item>23594, 23594, 11</item>
+
+        <!-- OP12 United States -->
+        <item>31004, 31004, 12</item>
+        <item>31010, 31010, 12</item>
+        <item>31012, 31013, 12</item>
+        <item>310590, 310590, 12</item>
+        <item>310890, 310890, 12</item>
+        <item>310910, 310910, 12</item>
+        <item>311110, 311110, 12</item>
+        <item>311270, 311289, 12</item>
+        <item>311390, 311390, 12</item>
+        <item>311480, 311489, 12</item>
+
+        <!-- OP15 Austria -->
+        <item>23208, 23208, 15</item>
+        <!-- United Kingdom -->
+        <item>23410, 23410, 15</item>
+        <!-- DE -->
+        <item>26207, 26207, 15</item>
+        <!-- OP132 movistar behaves as Telefonica -->
+        <!-- peru, columbia, argentina, vivo-brazil, maxico -->
+        <item>71606, 71606, 15</item>
+        <item>732123, 732123, 15</item>
+        <item>72207, 72207, 15</item>
+        <item>72406, 72406, 15</item>
+        <item>72410, 72411, 15</item>
+        <item>72423, 72423, 15</item>
+        <item>334030, 334030, 15</item>
+
+        <!-- OP16 United Kingdom -->
+        <item>23502, 23502, 16</item>
+        <item>23430, 23434, 16</item>
+        <item>23486, 23486, 16</item>
+
+        <!-- OP17 Japan -->
+        <item>44010, 44010, 17</item>
+        <!-- Guam -->
+        <item>310370, 310370, 17</item>
+        <item>310470, 310470, 17</item>
+
+        <!-- OP18 India -->
+        <item>405840, 405840, 18</item>
+        <item>405854, 405874, 18</item>
+        <item>40587, 40587, 18</item>
+
+        <!-- OP19 Australia -->
+        <item>50501, 50501, 19</item>
+        <item>50511, 50511, 19</item>
+        <item>50571, 50572, 19</item>
+        <!-- New Zealand -->
+        <item>53004, 53004, 19</item>
+
+        <!-- OP20 United States -->
+        <item>310120, 310120, 20</item>
+        <item>311490, 311490, 20</item>
+
+        <!-- OP50 Japan -->
+        <item>44000, 44000, 50</item>
+        <item>44020, 44020, 50</item>
+
+        <!-- OP100 Hongkong China -->
+        <item>45400, 45400, 100</item>
+        <item>45402, 45402, 100</item>
+        <item>45410, 45410, 100</item>
+        <item>45418, 45418, 100</item>
+
+        <!-- OP101 Hongkong China -->
+        <item>45416, 45416, 101</item>
+        <item>45419, 45420, 101</item>
+        <item>45429, 45429, 101</item>
+
+        <!-- OP102 Hongkong China -->
+        <item>45406, 45406, 102</item>
+
+        <!-- OP103 Singapore -->
+        <item>52501, 52502, 103</item>
+        <item>52507, 52507, 103</item>
+
+        <!-- OP104 Singapore -->
+        <item>52505, 52506, 104</item>
+
+        <!-- OP105 Paraguay -->
+        <item>74402, 74402, 105</item>
+
+        <!-- OP106 Hongkong China -->
+        <item>45403, 45405, 106</item>
+        <item>45414, 45414, 106</item>
+
+        <!-- OP107 Reunion -->
+        <item>64710, 64710, 107</item>
+        <!-- France -->
+        <item>20809, 20811, 107</item>
+
+        <!-- OP108 Taiwan -->
+        <item>46697, 46697, 108</item>
+
+        <!-- OP109 Taiwan -->
+        <item>46692, 46692, 109</item>
+
+        <!-- OP110 Taiwan -->
+        <item>46601, 46603, 110</item>
+        <item>46606, 46607, 110</item>
+        <item>46688, 46688, 110</item>
+
+        <!-- OP112 Venezuela -->
+        <item>73404, 73404, 112</item>
+        <!-- Former Netherlands Antilles -->
+        <item>36251, 36251, 112</item>
+        <!-- French Antilles -->
+        <item>34003, 34003, 112</item>
+        <!-- TelCel Maxico -->
+        <item>33402, 33402, 112</item>
+        <item>334020, 334020, 112</item>
+
+        <!-- OP113 Venezuela -->
+        <item>25099, 25099, 113</item>
+
+        <!-- OP114 South Korea -->
+        <item>45002, 45002, 114</item>
+        <item>45004, 45004, 114</item>
+
+        <!-- OP115 South Korea -->
+        <item>45005, 45005, 115</item>
+
+        <!-- OP116 South Korea -->
+        <item>45006, 45006, 116</item>
+
+        <!-- OP117 Indonesia -->
+        <item>51009, 51009, 117</item>
+        <item>51028, 51028, 117</item>
+
+        <!-- OP118 Malaysia -->
+        <item>502152, 502152, 118</item>
+
+        <!-- OP119 Haiti -->
+        <item>37203, 37203, 119</item>
+
+        <!-- OP120 Claro Colombia -->
+        <item>732101, 732101, 120</item>
+        <!-- Claro Peru -->
+        <item>71610, 71610, 120</item>
+        <!-- Claro Argentina -->
+        <item>722310, 722310, 120</item>
+        <item>722320, 722320, 120</item>
+        <item>722330, 722330, 120</item>
+
+        <!-- OP121 Canada -->
+        <item>302610, 302610, 121</item>
+        <item>302640, 302640, 121</item>
+        <item>302690, 302690, 121</item>
+
+        <!-- OP122 Thailand -->
+        <item>52001, 52001, 122</item>
+        <item>52003, 52003, 122</item>
+        <item>52023, 52023, 122</item>
+
+        <!-- OP124 Taiwan -->
+        <item>46605, 46605, 124</item>
+
+        <!-- OP125 Thailand -->
+        <item>52005, 52005, 125</item>
+
+        <!-- OP126 Turkey -->
+        <item>286003, 286003, 126</item>
+
+        <!-- OP127 Russian Megafon-->
+        <item>25002, 25002, 127</item>
+        <item>25011, 25011, 127</item>
+        <item>25030, 25030, 127</item>
+
+        <!-- OP128 Finland -->
+        <item>24412, 24412, 128</item>
+
+        <!-- OP129 Japan -->
+        <item>44007, 44008, 129</item>
+        <item>44050, 44056, 129</item>
+        <item>44070, 44079, 129</item>
+        <item>44088, 44089, 129</item>
+        <item>44170, 44170, 129</item>
+
+        <!-- OP130 Italy -->
+        <item>22201, 22201, 130</item>
+
+        <!-- OP131 TH -->
+        <item>52000, 52000, 131</item>
+        <item>52004, 52004, 131</item>
+
+        <!-- OP1001 Ericsson IODT -->
+        <item>262080, 262080, 1001</item>
+    </string-array>
+
+    <!-- CTA requirement - Permission request limit -->
+    <integer name="permission_records_limit">10</integer>
+
+    <!-- Device configuration adjusting LMK OOM ADJ -->
+    <integer-array name="config_lowMemoryKillerOomAdj">
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+    </integer-array>
+
+    <!-- Device configuration adjusting LMK Minfree -->
+    <integer-array name="config_lowMemoryKillerMinFreeKbytes">
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+    </integer-array>
+</resources>

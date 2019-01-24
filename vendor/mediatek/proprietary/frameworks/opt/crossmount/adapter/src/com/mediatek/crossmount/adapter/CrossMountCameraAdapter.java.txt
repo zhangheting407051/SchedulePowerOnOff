@@ -1,0 +1,205 @@
+package com.mediatek.crossmount.adapter;
+
+import android.content.Context;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.impl.CameraMetadataNative;
+
+import android.net.Uri;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.util.Log;
+
+
+
+/**
+ * Represents the camera adapter.
+ * <p>
+ * This class provides the interface to access CrossMount source camera.
+ * </p>
+ */
+public final class CrossMountCameraAdapter extends ICrossMountCameraCallback.Stub{
+    static final String TAG = "CrossMountCameraAdapter";
+
+    static final String CROSSMOUNT_MANAGER_SERVICE = "CrossMountManagerService";
+
+    /**
+     * The callback function for CrossMount service. The CrossMount source camera application
+     * should implement the callback function for CrossMount service to notify some events.
+     * The callback function is called with the binder thread of the application's process.
+     * Application could register its callback function when calling
+     * {@link #CrossMountCameraAdapter(Context context, CrossMountCameraAdapter.CallBack listener)}
+     * to get the default CrossMount adapter. Application also could unregister its
+     * callback function by calling {@link #releaseCallBack}.
+     */
+    public interface CallBack {
+        /**
+         * Callback when there is a repeat request from CrossMount host camera app.
+         * @param builder The repeat request.
+         */
+        public void onRepeatRequest(CaptureRequest.Builder builder);
+
+        /**
+         * Callback when there is a non-repeat request from CrossMount host camera app.
+         * @param builder The non-repeat request. For example, capture request.
+         * @param imageInfo The image info, ex: the image width and height for
+         * the non-repeat request.
+         */
+        public void onNonRepeatRequest(CaptureRequest.Builder builder, int[] imageInfo);
+    }
+
+    CallBack mCallerCallback;
+
+    // Locker
+    private static Object sLock = new Object();
+
+    // service link
+    private ICrossMountAdapter mService;
+    private final Context mContext;
+
+
+    public CrossMountCameraAdapter(Context context, CrossMountCameraAdapter.CallBack listener) {
+        Log.d(TAG, "CrossMountCameraAdapter constructor");
+
+        //Save the application context
+        mContext = context;
+
+        IBinder binder = ServiceManager.getService(CROSSMOUNT_MANAGER_SERVICE);
+        if (binder == null){
+            Log.e(TAG, "binder is null !");
+            return;
+        }
+
+        mService = ICrossMountAdapter.Stub.asInterface(binder);
+
+        if (mService == null) {
+            Log.e(TAG, "mService is null !");
+            return;
+        }
+
+        // Register service callback
+        try {
+            mService.setCrossMountCameraCallback(this);
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteExceptions():", e);
+        }
+
+        if (listener != null){
+            Log.d(TAG, "save listener to mCallerCallback");
+            mCallerCallback = listener;
+        }
+    }
+
+    /**
+     * Unregister your callback function to CrossMount service.
+     * @param listener The callback you want to unregister
+     * @return True if the callback is successfully unregistered
+     */
+    public boolean releaseCallBack(CrossMountCameraAdapter.CallBack listener){
+        Log.d(TAG, "releaseCallBack()");
+        if (mCallerCallback == listener){
+            mCallerCallback = null;
+            return true;
+        } else {
+            Log.d(TAG, "callback is wrong !!");
+            return false;
+        }
+    }
+
+    /**
+     * Send the camera repeat result to CrossMount service.
+     * <p>
+     * Only for use by the applications run with System UID.
+     * @param result The repeat result
+     * @return True if the repeat result is successfully send to CrossMount service.
+     */
+    public boolean sendRepeatResult(CaptureResult result){
+        try {
+            return mService.sendCameraRepeatResult(result.getNativeCopy());
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException !");
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    /**
+     * Send the camera non-repeat result to CrossMount service, ex: the captured image.
+     * <p>
+     * Only for use by the applications run with System UID.
+     * @param uri The Uri of the captured image
+     * @param result The non-repeat result
+     * @return True if the non-repeat result is successfully send to CrossMount service.
+     */
+    public boolean sendNonRepeatResult(Uri uri, CaptureResult result){
+
+        try {
+            return mService.sendCameraNonRepeatResult(uri, result.getNativeCopy());
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException !");
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    /**
+     * Set the camera preview orientation to CrossMount service.
+     * <p>
+     * Only for use by the applications run with System UID.
+     * @param angle The preview angle which should be 0, 90, 180 or 270.
+     * @return True if the camera preview orientation is successfully send to CrossMount service.
+     */
+    public boolean setOrientation(int angle) {
+
+        try {
+            return mService.setCameraPreviewOrientation(angle);
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException !");
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+
+
+    /** Callback from CrossMount service, usually on binder thread */
+    @Override
+    public void onRepeatRequest(CameraMetadataNative metaNative) {
+        Log.d(TAG, "onRepeatRequest()");
+
+        if (mCallerCallback != null) {
+            CaptureRequest.Builder builder = new CaptureRequest.Builder(metaNative, false, 0);
+
+            Log.d(TAG, "callback caller's onRepeatRequest()");
+            mCallerCallback.onRepeatRequest(builder);
+        }
+    }
+
+    @Override
+    public void onNonRepeatRequest(CameraMetadataNative metaNative, int[] imageInfo) {
+        Log.d(TAG, "onRepeatRequest()");
+
+        if (mCallerCallback != null) {
+
+            CaptureRequest.Builder builder = new CaptureRequest.Builder(metaNative, false, 0);
+
+            Log.d(TAG, "callback caller's onNonRepeatRequest()");
+            mCallerCallback.onNonRepeatRequest(builder, imageInfo);
+        }
+    }
+
+    // ******************************************************************
+    // package private methods
+    // ******************************************************************
+
+
+
+
+}

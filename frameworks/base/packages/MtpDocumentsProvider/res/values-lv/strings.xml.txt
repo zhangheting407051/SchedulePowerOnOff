@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP resursdators</string>
+    <string name="downloads_app_label">Lejupielādes</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Piekļuve failiem no &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt;</string>
+    <string name="error_busy_device">Otra ierīce ir aizņemta. Jūs nevarēsit pārsūtīt failus, līdz tā būs pieejama.</string>
+    <string name="error_locked_device">Nav atrasts neviens fails. Otra ierīce var būt bloķēta. Tādā gadījumā atbloķējiet to un mēģiniet vēlreiz.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_name">Servicios de biblioteca de Android</string>
+    <string name="notification_ranker">Servicio de notificación de clasificación de Android</string>
+    <string name="notification_ranker_autobundle_explanation">Agrupación automática actualizada por el servicio de clasificación</string>
+</resources>

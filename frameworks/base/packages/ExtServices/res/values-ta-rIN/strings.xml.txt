@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Android சேவை நூலகம்</string>
+    <string name="notification_ranker">Android அறிவிப்பு தரமிடல் சேவை</string>
+    <string name="notification_ranker_autobundle_explanation">தானியங்கி குழுப்படுத்தல் தரமிடல் சேவையால் புதுப்பிக்கப்பட்டது</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

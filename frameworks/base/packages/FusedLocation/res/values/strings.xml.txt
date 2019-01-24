@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources>
+    <!-- Name of the application. [CHAR LIMIT=35] -->
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">Fused Location</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

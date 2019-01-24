@@ -1,0 +1,321 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+LOCAL_PATH:= $(call my-dir)
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := libnodev8
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_CFLAGS := -DV8_ANDROID_LOG_STDOUT \
+                -DENABLE_DEBUGGER_SUPPORT \
+                -DNDEBUG \
+                -DOBJECT_PRINT \
+                -DENABLE_DISASSEMBLER \
+                -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 \
+                -fPIC
+
+#TARGET_ARCH := arm
+
+LOCAL_MULTILIB := both
+LOCAL_MODULE_TARGET_ARCH := arm arm64
+LOCAL_MODULE_TARGET_ARCH_WARN := arm arm64
+LOCAL_MODULE_STEM_32 := libnodev8_32
+LOCAL_MODULE_STEM_64 := libnodev8_64
+
+LOCAL_SRC_FILES_32 := \
+    src/accessors.cc \
+    src/allocation.cc \
+    src/allocation-site-scopes.cc \
+    src/allocation-tracker.cc \
+    src/api.cc \
+    src/arguments.cc \
+    src/assembler.cc \
+    src/assert-scope.cc \
+    src/ast-value-factory.cc \
+    src/ast.cc \
+    src/bignum-dtoa.cc \
+    src/bignum.cc \
+    src/bootstrapper.cc \
+    src/builtins.cc \
+    src/cached-powers.cc \
+    src/checks.cc \
+    src/code-stubs.cc \
+    src/code-stubs-hydrogen.cc \
+    src/codegen.cc \
+    src/compilation-cache.cc \
+    src/compiler/ast-graph-builder.cc \
+    src/compiler/change-lowering.cc \
+    src/compiler/code-generator.cc \
+    src/compiler/control-builders.cc \
+    src/compiler/gap-resolver.cc \
+    src/compiler/graph-builder.cc \
+    src/compiler/graph-reducer.cc \
+    src/compiler/graph-replay.cc \
+    src/compiler/graph-visualizer.cc \
+    src/compiler/graph.cc \
+    src/compiler/instruction-selector.cc \
+    src/compiler/instruction.cc \
+    src/compiler/js-context-specialization.cc \
+    src/compiler/js-generic-lowering.cc \
+    src/compiler/js-graph.cc \
+    src/compiler/js-typed-lowering.cc \
+    src/compiler/linkage.cc \
+    src/compiler/lowering-builder.cc \
+    src/compiler/machine-operator-reducer.cc \
+    src/compiler/node-cache.cc \
+    src/compiler/node.cc \
+    src/compiler/pipeline.cc \
+    src/compiler/raw-machine-assembler.cc \
+    src/compiler/register-allocator.cc \
+    src/compiler/schedule.cc \
+    src/compiler/scheduler.cc \
+    src/compiler/simplified-lowering.cc \
+    src/compiler/source-position.cc \
+    src/compiler/structured-machine-assembler.cc \
+    src/compiler/typer.cc \
+    src/compiler/verifier.cc \
+    src/compiler.cc \
+    src/contexts.cc \
+    src/conversions.cc \
+    src/counters.cc \
+    src/cpu-profiler.cc \
+    src/data-flow.cc \
+    src/date.cc \
+    src/dateparser.cc \
+    src/debug.cc \
+    src/deoptimizer.cc \
+    src/disassembler.cc \
+    src/diy-fp.cc \
+    src/dtoa.cc \
+    src/elements-kind.cc \
+    src/elements.cc \
+    src/execution.cc \
+    src/extensions/externalize-string-extension.cc \
+    src/extensions/free-buffer-extension.cc \
+    src/extensions/gc-extension.cc \
+    src/extensions/statistics-extension.cc \
+    src/extensions/trigger-failure-extension.cc \
+    src/factory.cc \
+    src/fast-dtoa.cc \
+    src/field-index.cc \
+    src/fixed-dtoa.cc \
+    src/flags.cc \
+    src/frames.cc \
+    src/full-codegen.cc \
+    src/func-name-inferrer.cc \
+    src/gdb-jit.cc \
+    src/global-handles.cc \
+    src/handles.cc \
+    src/heap-profiler.cc \
+    src/heap-snapshot-generator.cc \
+    src/heap/gc-tracer.cc \
+    src/heap/heap.cc \
+    src/heap/incremental-marking.cc \
+    src/heap/mark-compact.cc \
+    src/heap/objects-visiting.cc \
+    src/heap/spaces.cc \
+    src/heap/store-buffer.cc \
+    src/heap/sweeper-thread.cc \
+    src/hydrogen-bce.cc \
+    src/hydrogen-bch.cc \
+    src/hydrogen-canonicalize.cc \
+    src/hydrogen-check-elimination.cc \
+    src/hydrogen-dce.cc \
+    src/hydrogen-dehoist.cc \
+    src/hydrogen-environment-liveness.cc \
+    src/hydrogen-escape-analysis.cc \
+    src/hydrogen-instructions.cc \
+    src/hydrogen.cc \
+    src/hydrogen-gvn.cc \
+    src/hydrogen-infer-representation.cc \
+    src/hydrogen-infer-types.cc \
+    src/hydrogen-load-elimination.cc \
+    src/hydrogen-mark-deoptimize.cc \
+    src/hydrogen-mark-unreachable.cc \
+    src/hydrogen-osr.cc \
+    src/hydrogen-range-analysis.cc \
+    src/hydrogen-redundant-phi.cc \
+    src/hydrogen-removable-simulates.cc \
+    src/hydrogen-representation-changes.cc \
+    src/hydrogen-sce.cc \
+    src/hydrogen-store-elimination.cc \
+    src/hydrogen-types.cc \
+    src/hydrogen-uint32-analysis.cc \
+    src/icu_util.cc \
+    src/ic.cc \
+    src/interface.cc \
+    src/interpreter-irregexp.cc \
+    src/isolate.cc \
+    src/jsregexp.cc \
+    src/lithium-allocator.cc \
+    src/lithium-codegen.cc \
+    src/lithium.cc \
+    src/liveedit.cc \
+    src/log-utils.cc \
+    src/log.cc \
+    src/lookup.cc \
+    src/messages.cc \
+    src/objects-debug.cc \
+    src/objects-printer.cc \
+    src/objects.cc \
+    src/optimizing-compiler-thread.cc \
+    src/ostreams.cc \
+    src/parser.cc \
+    src/perf-jit.cc \
+    src/preparse-data.cc \
+    src/preparser.cc \
+    src/prettyprinter.cc \
+    src/profile-generator.cc \
+    src/property.cc \
+    src/regexp-macro-assembler-irregexp.cc \
+    src/regexp-macro-assembler-tracer.cc \
+    src/regexp-macro-assembler.cc \
+    src/regexp-stack.cc \
+    src/rewriter.cc \
+    src/runtime-profiler.cc \
+    src/runtime.cc \
+    src/safepoint-table.cc \
+    src/sampler.cc \
+    src/scanner-character-streams.cc \
+    src/scanner.cc \
+    src/scopeinfo.cc \
+    src/scopes.cc \
+    src/serialize.cc \
+    src/snapshot-source-sink.cc \
+    src/string-search.cc \
+    src/string-stream.cc \
+    src/strtod.cc \
+    src/stub-cache.cc \
+    src/token.cc \
+    src/transitions.cc \
+    src/type-info.cc \
+    src/types.cc \
+    src/typing.cc \
+    src/unicode.cc \
+    src/utils.cc \
+    src/v8.cc \
+    src/v8threads.cc \
+    src/variables.cc \
+    src/version.cc \
+    src/zone.cc \
+    third_party/fdlibm/fdlibm.cc \
+    src/snapshot-common.cc \
+    src/snapshot-empty.cc \
+    src/base/atomicops_internals_x86_gcc.cc \
+    src/base/cpu.cc \
+    src/base/logging.cc \
+    src/base/once.cc \
+    src/base/platform/time.cc \
+    src/base/platform/condition-variable.cc \
+    src/base/platform/mutex.cc \
+    src/base/platform/semaphore.cc \
+    src/base/utils/random-number-generator.cc \
+    src/base/platform/platform-linux.cc \
+    src/base/platform/platform-posix.cc \
+    src/gen/experimental-libraries.cc \
+    src/gen/libraries.cc
+
+LOCAL_SRC_FILES_64 := $(LOCAL_SRC_FILES_32)
+
+LOCAL_SRC_FILES_32 += \
+    src/arm/assembler-arm.cc \
+    src/arm/builtins-arm.cc \
+    src/arm/code-stubs-arm.cc \
+    src/arm/codegen-arm.cc \
+    src/arm/constants-arm.cc \
+    src/arm/cpu-arm.cc \
+    src/arm/debug-arm.cc \
+    src/arm/deoptimizer-arm.cc \
+    src/arm/disasm-arm.cc \
+    src/arm/frames-arm.cc \
+    src/arm/full-codegen-arm.cc \
+    src/arm/ic-arm.cc \
+    src/arm/lithium-arm.cc \
+    src/arm/lithium-codegen-arm.cc \
+    src/arm/lithium-gap-resolver-arm.cc \
+    src/arm/macro-assembler-arm.cc \
+    src/arm/regexp-macro-assembler-arm.cc \
+    src/arm/simulator-arm.cc \
+    src/arm/stub-cache-arm.cc \
+    src/compiler/arm/code-generator-arm.cc \
+    src/compiler/arm/instruction-selector-arm.cc \
+    src/compiler/arm/linkage-arm.cc
+
+LOCAL_SRC_FILES_64 += \
+    src/arm64/assembler-arm64.cc \
+    src/arm64/builtins-arm64.cc \
+    src/arm64/code-stubs-arm64.cc \
+    src/arm64/codegen-arm64.cc \
+    src/arm64/cpu-arm64.cc \
+    src/arm64/debug-arm64.cc \
+    src/arm64/decoder-arm64.cc \
+    src/arm64/delayed-masm-arm64.cc \
+    src/arm64/deoptimizer-arm64.cc \
+    src/arm64/disasm-arm64.cc \
+    src/arm64/frames-arm64.cc \
+    src/arm64/full-codegen-arm64.cc \
+    src/arm64/ic-arm64.cc \
+    src/arm64/instructions-arm64.cc \
+    src/arm64/instrument-arm64.cc \
+    src/arm64/lithium-arm64.cc \
+    src/arm64/lithium-codegen-arm64.cc \
+    src/arm64/lithium-gap-resolver-arm64.cc \
+    src/arm64/macro-assembler-arm64.cc \
+    src/arm64/regexp-macro-assembler-arm64.cc \
+    src/arm64/simulator-arm64.cc \
+    src/arm64/stub-cache-arm64.cc \
+    src/arm64/utils-arm64.cc \
+    src/compiler/arm64/code-generator-arm64.cc \
+    src/compiler/arm64/instruction-selector-arm64.cc \
+    src/compiler/arm64/linkage-arm64.cc
+
+
+
+LOCAL_C_INCLUDES_32 := \
+    $(LOCAL_PATH)/src/. \
+    $(LOCAL_PATH)/include/. \
+    $(LOCAL_PATH)/heap/. \
+    $(LOCAL_PATH)/base/. \
+    $(LOCAL_PATH)/base/platform/. \
+    $(LOCAL_PATH)/base/utils/. \
+    $(LOCAL_PATH)/third_party/fdlibm/.
+
+LOCAL_C_INCLUDES_64 := $(LOCAL_C_INCLUDES_32)
+
+LOCAL_C_INCLUDES_32 += \
+    $(LOCAL_PATH)/src/arm/. \
+    $(LOCAL_PATH)/src/compiler/arm/.
+
+LOCAL_C_INCLUDES_64 += \
+    $(LOCAL_PATH)/src/arm64/. \
+    $(LOCAL_PATH)/src/compiler/arm64/.
+
+#ifeq ($(TARGET_ARCH),arm)
+#LOCAL_SRC_FILES += $(LOCAL_SRC_FILES_32)
+#LOCAL_C_INCLUDES += $(LOCAL_C_INCLUDES_32)
+#endif
+
+#ifeq ($(TARGET_ARCH),arm64)
+#LOCAL_SRC_FILES += $(LOCAL_SRC_FILES_64)
+#LOCAL_C_INCLUDES += $(LOCAL_C_INCLUDES_64)
+#endif
+
+LOCAL_CPP_EXTENSION := .cc
+
+#LOCAL_SHARED_LIBRARIES := libstlport.so
+
+#include external/stlport/libstlport.mk
+#LOCAL_SHARED_LIBRARIES += libstlport
+
+LOCAL_C_INCLUDES += \
+    bionic
+#bionic/libstdc++/include
+#external/libcxx/include
+    
+LOCAL_SHARED_LIBRARIES += libc++
+
+include $(MTK_STATIC_LIBRARY)
+
+endif

@@ -1,0 +1,919 @@
+package com.mediatek.crossmount.adapter;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.SystemProperties;
+import android.util.Log;
+
+import java.util.ArrayList;
+
+/**
+* <p>
+* This class provides the interface to access CrossMount service. You can turn on and turn off
+* CrossMount, discover peer devices which also enable CrossMount, mount and unmount the services
+* supported on the specific peer device.
+* </p>
+*
+* <h3>Using CrossMountAdapter</h3>
+*
+* <p>
+* Use the helper {@link #getDefaultAdapter(Context, CrossMountAdapter.CallBack)} to get the
+* default CrossMount adapter.
+* </p>
+*/
+
+public final class CrossMountAdapter extends ICrossMountCallback.Stub{
+    static final String TAG = "CrossMountAdapter";
+
+    static final String CROSSMOUNT_MANAGER_SERVICE = "CrossMountManagerService";
+
+    /**
+     *  The feature state for CrossMount.
+     */
+    public enum FeatureState {
+        /**
+         * Disabled state. CrossMount enters this state by calling {@link #disable()}.
+         */
+        DISABLED,
+        /**
+         * Enabling state. CrossMount enters this state by calling {@link #enable()}.
+         */
+        ENABLING,
+        /**
+         * Enabled state. CrossMount enters this state when it's successfully enabled.
+         */
+        ENABLED
+    }
+
+    /**
+     *  The supported build-in service type for CrossMount.
+     */
+    public enum BuildInServiceType{
+        /**
+         * The build-in service type: Camera. Application could mount the camera from a specific
+         * peer device and could share its camera to peer devices.
+         */
+        CAMERA,
+        /**
+         * The build-in service type: Speaker. Application could mount the speaker from a specific
+         * peer device and could share its speaker to peer devices.
+         */
+        SPEAKER,
+        /**
+         * The build-in service type: Microphone. Application could mount the microphone from a
+         * specific peer device and could share its speaker to peer devices.
+         */
+        MICROPHONE,
+        /**
+         * The build-in service type: Controller. Application could mount the controller (
+         * touch and sensor) from a specific peer device and could share its controller (touch
+         * and sensor) to peer devices.
+         */
+        CONTROLLER,
+        /**
+         * The build-in service type: Invalid. It's unrecognized service type.
+         */
+        INVALID
+    }
+
+    // Should sync with CrossMountAdapter
+    /**
+     *  The service event for CrossMount service.
+     */
+    public enum ServiceEvent {
+        /**
+         * Service event: Camera orientation. When camera orientation is changed,
+         * the event is callbacked to notify the application.
+         */
+        CAMERA_ORIENTATION,
+
+        /**
+         * Service event: Stereo sound mode. When stereo sound mode is changed,
+         * the event is callbacked to notify the application.
+         */
+        STEREO_SOUND_MODE
+    }
+
+    // Default adapter
+    private static CrossMountAdapter sDefaultAdapter;
+
+    // Locker
+    private static Object sLock = new Object();
+
+    // Service link
+    private ICrossMountAdapter mService;
+
+    private final Context mContext;
+
+    private final ArrayList<CallBack> mCallerCallbacks = new ArrayList<CallBack>();
+
+    /**
+     * The callback function for CrossMount service. Application should implement the callback
+     * function for CrossMount service to notify some events. The callback function is called with
+     * the binder thread of the application's process.  You could register your callback function
+     * when you call
+     * {@link #getDefaultAdapter(Context context, CrossMountAdapter.CallBack listener)}
+     * to get the default CrossMount adapter or by calling
+     * {@link #setCallBack(CrossMountAdapter.CallBack listener)}. You also could unregister your
+     * callback function by calling {@link #releaseCallBack}.
+     */
+    public interface CallBack {
+        /**
+         * Callback when the feature state of CrossMount is updated.
+         * @param featureState The current feature state.
+         */
+        public void onFeatureStateUpdate(CrossMountAdapter.FeatureState featureState);
+
+        /**
+         * Callback when the discovery result is updated. The callback is only called when the
+         * application calls {@link #startDiscover(String[] serviceId)}.
+         * @param reason The fail reason of the discovery result. Zero means succeed.
+         */
+        public void onDiscoverResultUpdate(int reason);
+
+        /**
+         * Callback when the connection result is updated.
+         */
+        public void onConnectionResultUpdate();
+
+        /**
+         * Callback when the trust devices list is updated. When the user adds a device into
+         * the trust device list or remove a device from the trust device list,
+         * the callback will be called.
+         */
+        public void onTrustDeviceUpdated();
+
+        /**
+         * Callback when my provider service is updated. When a plug-in service registers
+         * the new service to the CrossMount service, the callback will be called.
+         */
+        public void onMyProviderServicesUpdate();
+
+        /**
+         * Callback when the application icon for a plug-in service on peer device is ready.
+         * CrossMount service starts to download the application icon when user mounts to
+         * the service on peer device for the first time.
+         */
+        public void onPlugInServiceIconReady();
+
+        /**
+         * Callback when there is service events updated.
+         * @param event The event type
+         * @param value The value for the event type
+         * @param deviceId The device ID
+         */
+        public void onServiceEventUpdate(ServiceEvent event, int value, String deviceId);
+    }
+
+    /**
+     * The static interface to get the CrossMountAdapter instance.
+     * @param context  The application context
+     * @param listener The callback for CrossMount service to notify the events happen
+     * @return A CrossMountAdapter instance
+     */
+    public static CrossMountAdapter getDefaultAdapter(
+        Context context, CrossMountAdapter.CallBack listener) {
+
+        Log.d(TAG, "getDefaultAdapter(), listener: " + listener);
+
+        if (!SystemProperties.get("ro.mtk_crossmount_support").equals("1")) {
+            Log.d(TAG, "ro.mtk_crossmount_support isn't 1");
+            return null;
+        }
+
+        if (context == null) {
+            Log.d(TAG, "context is null!");
+            throw new IllegalArgumentException("context cannot be null");
+        }
+
+        context = context.getApplicationContext();
+        if (context == null) {
+            Log.d(TAG, "application context is null!");
+            throw new IllegalArgumentException(
+                "context not associated with any application (using a mock context?)");
+        }
+
+        synchronized (sLock) {
+            if (sDefaultAdapter == null) {
+                IBinder binder = ServiceManager.getService(CROSSMOUNT_MANAGER_SERVICE);
+                if (binder == null){
+                    Log.d(TAG, "binder is null!");
+                    return null;
+                }
+
+                ICrossMountAdapter service = ICrossMountAdapter.Stub.asInterface(binder);
+                if (service == null){
+                    Log.d(TAG, "service is null!");
+                    return null;
+                }
+
+                sDefaultAdapter = new CrossMountAdapter(context);
+                sDefaultAdapter.mService = service;
+            }
+        }
+
+        sDefaultAdapter.setCallBack(listener);
+        //Log.d(TAG, "getDefaultAdapter() return, sDefaultAdapter:" + sDefaultAdapter);
+
+        return sDefaultAdapter;
+    }
+
+    CrossMountAdapter(Context context) {
+        Log.d(TAG, "CrossMountAdapter constructor");
+        mContext = context;
+    }
+
+    /**
+     * Register your callback function to CrossMount service.
+     * @param listener The callback for CrossMount service to notify the events happen
+     * @return True if the callback is successfully registered
+     */
+    public boolean setCallBack(CrossMountAdapter.CallBack listener){
+        Log.d(TAG, "setCallBack(), listener: " + listener);
+
+        if (listener != null && !mCallerCallbacks.contains(listener)){
+            mCallerCallbacks.add(listener);
+
+            int size = mCallerCallbacks.size();
+            Log.d(TAG, "mCallerCallbacks, size:" + size);
+
+            if (size == 1) {
+                // Register service callback
+                try {
+                    mService.setCrossMountCallback(sDefaultAdapter);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "RemoteException()!");
+                }
+            }
+            return true;
+        }
+
+        if (listener == null) {
+            Log.d(TAG, "listener is null!");
+        } else {
+            Log.d(TAG, "listener is the same!");
+        }
+        return false;
+    }
+
+    /**
+     * Unregister your callback function to CrossMount service.
+     * @param listener The callback you want to unregister
+     * @return True if the callback is successfully unregistered
+     */
+    public boolean releaseCallBack(CrossMountAdapter.CallBack listener){
+        Log.d(TAG, "releaseCallBack(), listener: " + listener);
+        if (mCallerCallbacks.contains(listener)){
+            mCallerCallbacks.remove(listener);
+
+            int size = mCallerCallbacks.size();
+            Log.d(TAG, "mCallerCallbacks, size:" + size);
+
+            if (size == 0) {
+                // unRegister service callback
+                try {
+                    mService.releaseCrossMountCallback(sDefaultAdapter);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "RemoteException()!");
+                }
+            }
+            return true;
+        }
+        Log.d(TAG, "listener is not found !");
+        return false;
+    }
+
+    /**
+     * Get the feature state for CrossMount.
+     * @return The current feature state.
+     */
+    public FeatureState getFeatureState() {
+        Log.d(TAG, "getFeatureState()");
+        try {
+            return FeatureState.valueOf(mService.getFeatureState());
+        } catch (RemoteException e) {
+            Log.d(TAG, "remoteException!");
+            return FeatureState.DISABLED;
+        }
+    }
+
+    /**
+     * Enable CrossMount.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually enable CrossMount.
+     * @return True if the command works.
+     */
+    public boolean enable() {
+        Log.d(TAG, "enable()");
+        try {
+            return mService.enable();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    /**
+     * Disable CrossMount.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually disable CrossMount.
+     * @return True if the command works.
+     */
+    public boolean disable() {
+        Log.d(TAG, "disable()");
+        try {
+            return mService.disable();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    /**
+     * Query if CrossMount is enabled.
+     * @return True if CrossMount is enabled.
+     */
+    public boolean isEnabled() {
+        Log.d(TAG, "isEnabled()");
+        try {
+            return mService.isEnabled();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return false;
+        }
+    }
+
+    /**
+     * Start discover the peer devices which also enables CrossMount.
+     * @return True if succeed.
+     */
+    public boolean startDiscover(String[] serviceId) {
+        Log.d(TAG, "startDiscover()");
+        try {
+            return mService.startDiscover(serviceId);
+
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Stop discover the peer devices which also enables CrossMount.
+     */
+    public void stopDiscover() {
+        Log.d(TAG, "stopDiscover()");
+        try {
+            mService.stopDiscover();
+        } catch (RemoteException e) {
+
+        }
+    }
+
+    /**
+     * Query if CrossMount is in discovering status.
+     */
+    public boolean isDiscovering(){
+        try {
+            return mService.isDiscovering();
+        } catch (RemoteException e) {
+            return false;
+        }
+
+    }
+
+    /**
+     * Query my device.
+     * @return A device instance contains my device information.
+     */
+    public Device getMyDevice(){
+        Log.d(TAG, "getMyDevice()");
+        try {
+            String deviceId = mService.getMyDeviceId();
+            String deviceName = mService.getDeviceName(deviceId);
+            String deviceType = mService.getDeviceType(deviceId);
+
+            return new Device(deviceId, deviceName, deviceType, this);
+        } catch (RemoteException e) {
+            Log.d(TAG, "RemoteException()");
+        }
+        return null;
+
+    }
+
+    /**
+     * Query my trusted peer devices. The devices in the trust devices list can mount to
+     * my service or share their services to me without my confirmation when building up
+     * the connection.
+     * @return The trusted peer devices.
+     */
+    public Device[] getTrustDevices(){
+        Log.d(TAG, "getTrustDevices()");
+        try {
+            String[] deviceIds = mService.getTrustDevices();
+            if (deviceIds == null){
+                Log.d(TAG, "deviceId is null!");
+                return null;
+            }
+
+            Device[] devices = new Device[deviceIds.length];
+
+            int i = 0;
+            for (String deviceId : deviceIds) {
+
+                String deviceName = mService.getTrustDeviceName(deviceId);
+                String deviceType = mService.getTrustDeviceType(deviceId);
+
+                devices[i] = new Device(deviceId, deviceName, deviceType, this);
+                i ++;
+            }
+            return devices;
+        } catch (RemoteException e) {
+            return new Device[0];
+        }
+    }
+
+    /**
+     * Query the available peer devices. When there is the discovery result, the application
+     * should use the interface to query the available peer devices
+     * @return The available peer devices.
+     */
+    public Device[] getAvailableDevices(){
+        Log.d(TAG, "getAvailableDevices()");
+        try {
+            String[] deviceIds = mService.getAvailableDevices();
+            if (deviceIds == null){
+                Log.d(TAG, "deviceId is null!");
+                return null;
+            }
+            Device[] devices = new Device[deviceIds.length];
+
+            int i = 0;
+            for (String deviceId : deviceIds) {
+                String deviceName = mService.getDeviceName(deviceId);
+                String deviceType = mService.getDeviceType(deviceId);
+
+                devices[i] = new Device(deviceId, deviceName, deviceType, this);
+                i ++;
+            }
+            return devices;
+        } catch (RemoteException e) {
+            return new Device[0];
+        }
+
+
+    }
+
+
+    /**
+     * Query the build-in service id.
+     * @param type The build-in service type.
+     * @return The build-in service id of the specific build-in service type.
+     */
+    public String getBuildInServiceId(BuildInServiceType type) {
+        try {
+            int value = type.ordinal();
+            return mService.getBuildInServiceId(value);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Query the build-in service's display name in multi-language.
+     * @param name The build-in service name.
+     * @return The build-in service's display name in multi-language for the specific build-in
+     *  service name.
+     */
+    public String getBuildInServiceDisplayName(String name) {
+        try {
+            if (name != null) {
+                return mService.getBuildInServiceDisplayName(name);
+            } else {
+                Log.d(TAG, "getBuildInServiceDisplayName(), name is null!");
+                return null;
+            }
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Enable stereo sound.
+     * @param leftDeviceId The left speaker's device id.
+     * @param rightDeviceId The right speaker's device id.
+     * @return True if succeed.
+     */
+    public boolean enableStereoSound(String leftDeviceId, String rightDeviceId) {
+        try {
+            return mService.enableStereoSound(leftDeviceId, rightDeviceId);
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return false;
+        }
+    }
+
+    /**
+     * Disable stereo sound.
+     */
+    public void disableStereoSound() {
+        try {
+            mService.disableStereoSound();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+        }
+    }
+
+    /**
+     * Query if stereo sound is enabled.
+     * @return True if enabled.
+     */
+    public boolean isStereoSoundEnabled() {
+        try {
+            return mService.isStereoSoundEnabled();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return false;
+        }
+    }
+
+    /**
+     * Query the left stereo speaker device ID.
+     * @return The left stereo speaker device ID.
+     */
+    public String getLeftStereoSpeakerDeviceId() {
+        try {
+            return mService.getLeftStereoSpeakerDeviceId();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return null;
+        }
+    }
+
+    /**
+     * Query the right stereo speaker device ID.
+     * @return The left stereo speaker device ID.
+     */
+    public String getRightStereoSpeakerDeviceId() {
+        try {
+            return mService.getRightStereoSpeakerDeviceId();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException");
+            return null;
+        }
+    }
+
+    /** Callback from CrossMount service, on binder thread */
+    /**
+     * @hide
+     */
+    @Override
+    public void onFeatureStateUpdate(String featureState) {
+        Log.d(TAG, "onFeatureStateUpdate(), featureState:" + featureState);
+
+        FeatureState state = FeatureState.valueOf(featureState);
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onFeatureStateUpdate()");
+            callback.onFeatureStateUpdate(state);
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    public void onDiscoverResultUpdate(int reason) {
+        Log.d(TAG, "onDiscoverResultUpdate():" + reason);
+
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onDiscoverResultUpdate()");
+            callback.onDiscoverResultUpdate(reason);
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    public void onConnectionResultUpdate(){
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onConnectionResultUpdate()");
+            callback.onConnectionResultUpdate();
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    public void onTrustDeviceUpdated() {
+        Log.d(TAG, "onTrustDeviceUpdated()");
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onTrustDeviceUpdated()");
+            callback.onTrustDeviceUpdated();
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    public void onMyProviderServicesUpdate(){
+        Log.d(TAG, "onMyProviderServicesUpdate()");
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onMyProviderServicesUpdate()");
+            callback.onMyProviderServicesUpdate();
+        }
+    }
+
+    /**
+     * @hide
+     */
+    @Override
+    public void onPlugInServiceIconReady(){
+        Log.d(TAG, "onPlugInServiceIconReady()");
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onPlugInServiceIconReady()");
+            callback.onPlugInServiceIconReady();
+        }
+    }
+
+    /**
+     * @hide
+     * @param event The event happens
+     * @param value The event value
+     * @param deviceId The device Id triggers the event
+     */
+    @Override
+    public void onServiceEventUpdate(int event, int value, String deviceId) {
+        Log.d(TAG, "onServiceEventUpdate(), evt:" + event +
+                   ",value:" + value + ",deviceId:" + deviceId);
+
+        for (CallBack callback : mCallerCallbacks) {
+            Log.d(TAG, "call caller's onServicesEventUpdate()");
+            callback.onServiceEventUpdate(ServiceEvent.values()[event], value, deviceId);
+        }
+    }
+
+
+    // ******************************************************************
+    // package private methods
+    // ******************************************************************
+
+    /* Device.java */
+    String getDeviceName(String deviceId){
+        try {
+            return mService.getDeviceName(deviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+    String getDeviceType(String deviceId){
+        try {
+            return mService.getDeviceType(deviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+    boolean setDeviceName(String name){
+        try {
+            return mService.setDeviceName(name);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    String[] getProviderServices(String deviceId){
+        try {
+            return mService.getProviderServices(deviceId);
+        } catch (RemoteException e) {
+            return new String[0];
+        }
+    }
+
+    boolean removeFromTrust(String deviceId){
+        try {
+            return mService.removeFromTrust(deviceId);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    int getConnectCount(String deviceId){
+        try {
+            return mService.getConnectCount(deviceId);
+        } catch (RemoteException e) {
+            return 0;
+        }
+    }
+
+    /* Service.java */
+    String getServiceName(String deviceId, String serviceId){
+        try {
+            return mService.getServiceName(deviceId, serviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+
+    }
+
+    int getServiceSerialNumber(String deviceId, String serviceId){
+        try {
+            return mService.getServiceSerialNumber(deviceId, serviceId);
+        } catch (RemoteException e) {
+            return -1;
+        }
+
+    }
+
+    String getServiceStatus(String deviceId, String serviceId, String sharedDeviceId){
+        try {
+            return mService.getServiceStatus(deviceId, serviceId, sharedDeviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+    boolean setServiceAllow(String serviceId, boolean allow){
+        try {
+            return mService.setServiceAllow(serviceId, allow);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+    boolean getServiceAllow(String serviceId) {
+        try {
+            return mService.getServiceAllow(serviceId);
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    boolean isPlugInService(String serviceId, String deviceId) {
+        try {
+            return mService.isPlugInService(serviceId, deviceId);
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    Drawable getPlugInIcon(String serviceId, String deviceId) {
+        try {
+            Bitmap bitmap = mService.getPlugInServiceIcon(serviceId, deviceId);
+            if (bitmap != null){
+                return new BitmapDrawable(bitmap);
+            } else {
+                return null;
+            }
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+    String[] getSharedDevices(String serviceId){
+        try {
+            return mService.getSharedDevices(serviceId);
+        } catch (RemoteException e) {
+            return new String[0];
+        }
+    }
+
+    boolean shareProviderService(String serviceId, String deviceId){
+        try {
+            return mService.shareProviderService(serviceId, deviceId);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    boolean stopShareProviderService(String serviceId, String deviceId){
+        try {
+            return mService.stopShareProviderService(serviceId, deviceId);
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    boolean mountProviderService(String serviceId, String deviceId){
+        try {
+            return mService.mountProviderService(serviceId, deviceId);
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    boolean stopMountProviderService(String serviceId, String deviceId){
+        try {
+            return mService.stopMountProviderService(serviceId, deviceId);
+        } catch (RemoteException e) {
+            return false;
+        }
+    }
+
+    int getRemoteCameraId(String deviceId){
+        try {
+            return mService.getRemoteCameraId(deviceId);
+        } catch (RemoteException e) {
+            return -1;
+        }
+    }
+
+    int getRemoteCameraOrientation(String deviceId) {
+        try {
+            return mService.getRemoteCameraOrientation(deviceId);
+        } catch (RemoteException e) {
+            return -1;
+        }
+    }
+
+    int getSensorOrientation() {
+        try {
+            return mService.getSensorOrientation();
+        } catch (RemoteException e) {
+            return -1;
+        }
+    }
+
+    boolean setSensorOrientation(int rotate) {
+        try {
+            return mService.setSensorOrientation(rotate);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    boolean sendControlMessage(String msg) {
+        try {
+            return mService.sendControlMessage(msg);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    int[] getSupportedSensors(String deviceId) {
+        try {
+            return mService.getSupportedSensors(deviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+    String getSensorName(int sensorType) {
+        try {
+            return mService.getSensorName(sensorType);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+    boolean setActivatedSensors(String deviceId, int[] sensorTypes) {
+        try {
+            return mService.setActivatedSensors(deviceId, sensorTypes);
+        } catch (RemoteException e) {
+            return false;
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException");
+            return false;
+        }
+    }
+
+    int[] getActivatedSensors(String deviceId) {
+        try {
+            return mService.getActivatedSensors(deviceId);
+        } catch (RemoteException e) {
+            return null;
+        }
+    }
+
+}

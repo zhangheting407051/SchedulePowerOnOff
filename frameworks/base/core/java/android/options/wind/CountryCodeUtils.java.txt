@@ -1,0 +1,902 @@
+//liuqiong@wind-mobi.com add 2016-12-06 begin
+package android.options.wind;
+
+//zhengzhe@wind-mobi.com 20170630 start
+//fix Bug#171361 hide Wun Zinn and Ban Keyboard applications at guest mode
+import android.content.pm.IPackageManager;
+import android.os.ServiceManager;
+//zhengzhe@wind-mobi.com 20170630 end
+import android.os.SystemProperties;
+import android.content.Context;
+import android.provider.Settings;
+import android.util.Log;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+//yexumin@wind-mobi.com add 20171009 start
+import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.TelephonyProperties;
+//yexumin@wind-mobi.com add 20171009 end
+
+import android.content.IntentFilter;
+import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.telephony.TelephonyManager;
+import android.content.pm.PackageManager;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.InputStream;
+//yuanzhiqiang@wind-mobi.com add 2017-01-05 start
+import java.util.List;
+//yuanzhiqiang@wind-mobi.com add 2017-01-05 end
+public class CountryCodeUtils {
+    public static final Map<String, String> mCountryCodeConfig = new HashMap<String, String>();
+    public static final String COUNTRYCODE_PATH = "/system/vendor/etc/country_code_list.xml";
+    public static final String COUNTRYCODE_COMMON_PATH = "/system/vendor/etc/common_config.xml";
+    public static final String COUNTRYCODE_CONFIG_PATH = "/system/vendor/etc/";
+    public static final String COUNTRYCODE_CONFIG_PATH_SUFFIX = "_config.xml";    
+
+    public static final String COUNTRYCODE_ITEM_LANGUAGE = "Language";
+    public static final String COUNTRYCODE_ITEM_SHOW_APK = "ShowApk";
+    public static final String COUNTRYCODE_ITEM_ALL_APK = "AllApk";
+    //gaoyuan@wind-mobi.com add 2016/12/16 start
+    public static final String COUNTRYCODE_ITEM_HIDE_WALLPAPER = "DefaultWallpaper";
+    public static final String COUNTRYCODE_ITEM_SMS_ENCODE_TYPE = "SmsEncodeType";
+    public static final String COUNTRYCODE_ITEM_NUM_MIN_MATCH = "NumMinMatch";
+    public static final String COUNTRYCODE_ITEM_SPN_FILE_PATH = "SpnFilePath";
+    public static final String COUNTRYCODE_ITEM_APN_FILE_PATH = "ApnFilePath";
+    public static final String COUNTRYCODE_ITEM_VSPN_GIDL_FILE_PATH = "VspnGidlFilePath";
+    public static final String COUNTRYCODE_ITEM_VSPN_PNN_FILE_PATH = "VspnPnnFilePath";
+    public static final String COUNTRYCODE_ITEM_VSPN_SPN_FILE_PATH = "VspnSpnFilePath";
+    public static final String COUNTRYCODE_ITEM_VSPN_IMSI_FILE_PATH = "VspnImsiFilePath";
+    public static final String COUNTRYCODE_ITEM_DEAULT_WORKSPACE = "DefaultWorkspace";
+    public static final String COUNTRYCODE_ITEM_SHOW_HYPHENATION = "ShowHyphenation";
+    /** @hide */public static final String COUNTRYCODE_ITEM_VM_READ_FROM_SIM = "VoiceMailReadFromSim";
+    /** @hide */public static final String COUNTRYCODE_ITEM_DO_NOT_SEPARATE_NUM = "DoNotSeparateNum";
+    //gaoyuan@wind-mobi.com add 2016/12/16 end
+    /* zhangheting@wind-mobi.com add 2016/12/13 start */
+    public static final String COUNTRYCODE_ITEM_ECC_LIST = "Ecclist";
+    /* zhangheting@wind-mobi.com add 2016/12/13 end */
+
+    //zhengxingshuang@wind-mobi.com 20170225 start
+     /** @hide */public static final String COUNTRYCODE_EMERGENCY_NUMBER_SHOW_IN_CALLOG = "EnumberShowInCalllog";
+    //zhengxingshuang@wind-mobi.com 20170225 start
+
+    //chusuxia@wind-mobi.com 20161223 start
+    //add for CC_CBON
+    public static final String COUNTRYCODE_ITEM_CBON_SET = "CbonSet";
+    /** @hide */public static final String COUNTRYCODE_ITEM_UMTSCB_OFF = "UMTSCBOFF";
+    //chusuxia@wind-mobi.com 20161223 end
+
+    private static final String COUNTRYCODE_FLAG_PATH = "/protect_f/country_init_flag";
+    //chenjinfa@wind-mobi.com add 2016/12/12  start
+    public  static  final String COUNTRYCODE_ITEM_TIMEZONE="Timezone";
+    public  static  final String COUNTRYCODE_ITEM_DATE_FORMAT ="DateFormat";
+    public  static  final String COUNTRYCODE_ITEM_TIME_USE_24H_FORMAT ="Use24hFormat";
+    //chenjinfa@wind-mobi.com add 2016/12/12  end
+
+    //huangfei@wind-mobi.com add 2016.12.13 start
+    public static final String COUNTRYCODE_ITEM_ADDYAHOOBOOKMARKS = "AddYahooBookmarks";
+    public static final String COUNTRYCODE_ITEM_CHROMEHOMEPAGE = "ChromeHomepage";
+    public static final String COUNTRYCODE_ITEM_CHROMEBOOKMARKS = "ChromeBookmarks";
+    public static final String COUNTRYCODE_ITEM_HOMEPAGE = "Homepage";
+    public static final String COUNTRYCODE_ITEM_BOOKMARKS = "Bookmarks";
+    public static final String COUNTRYCODE_ITEM_SEARCHENGINE = "SearchEngine";
+    public static final String COUNTRYCODE_ITEM_SHOWCMASTITLETIME = "ShowCMASTitleTime";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_SHOWCMASTENMIN = "ShowCMASTenMin";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_SHOWCELLBROADCASTSETTING = "ShowCellBroadCastSetting";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_CMASAUDIOALWARYS = "CMASAudioAlwarys";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_CMASDISABLEKEY = "CMASDisableKey";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_CBDISPLAYBOTTOM = "CBDisplayBottom";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_919AND911ASEMER = "919And911AsEMER";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_COUNTRYHIDEAPK = "CountryHideApk";
+    //huangfei@wind-mobi.com add 2016.12.13 end
+
+    //jiangyingying@wind-mobi.com 2016.12.28 start
+    public static final String COUNTRYCODE_ITEM_SPN_NOT_DISPLAY = "SpnNotDisplay";
+    //jiangyingying@wind-mobi.com 2016.12.28 end
+    //caopei@wind-mobi.com 2017.03.01 start
+    public static final String COUNTRYCODE_ITEM_CUSTOM_EHPLMN = "CustomEhplmn";
+    public static final String COUNTRYCODE_ITEM_VOICEMAIL_NOTIFICATION = "VoicemailNotification";
+    public static final String COUNTRYCODE_ITEM_ENABLE_WAP_PUSH_SI= "enableWapPushSI";
+    public static final String COUNTRYCODE_ITEM_ALLOW_SMS_ENABLING_WAP_PUSH_SI= "allowEnablingWapPushSI";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_CONSIDERASTION_SPECIAL_CHAR= "considerationSpecialChar";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_DEFAULT_STK_NAME= "defaultStkName";
+    /** @hide */ public static final String COUNTRYCODE_ITEM_CUSTOM_ROAMING= "customRoaming";
+    //caopei@wind-mobi 2017.03.01 end
+    public static final String COUNTRYCODE_ITEM_DEFAULT_INPUT_METHOD = "DefaultInputMethod";
+    public static final String COUNTRYCODE_ITEM_USSD_BEHIND_INCALL = "USSDBehindInCall";
+    public static final String COUNTRYCODE_ITEM_USSD_SHOW_TITLE = "USSDShowTitle";
+    
+    //yexumin@wind-mobi.com add 20170101 start
+    public static final String COUNTRYCODE_ITEM_NETWORKINFOLINE1 = "NetworkInfoLine1";
+    public static final String COUNTRYCODE_ITEM_NETWORKINFOLINE2 = "NetworkInfoLine2";
+    public static final String COUNTRYCODE_ITEM_VOLTE_AVAILABLE = "VolteAvailable";
+    //yexumin@wind-mobi.com add 20170101 end
+
+    //zhanghaijun@wind-mobi.com 2017.01.04 start
+    public static final String COUNTRYCODE_ITEM_DATA_SPCSIMPRIORITY = "DataSpcSimPriority";
+    //zhanghaijun@wind-mobi.com 2017.01.04 end
+    //wangshaohu@wind-mobil.com 20170411 add start
+     public static final String COUNTRYCODE_ITEM_DATA_SPCSIMPRIORITY_CLARO = "DataSpcSimPriorityClaro";
+    /** @hide */public static final String COUNTRYCODE_ITEM_DATA_ROAMING ="DataRoaming";
+    /** @hide */public static final String COUNTRYCODE_ITEM_DATA_SPCSIMPRIORITY_VIVO = "DataSpcSimPriorityVivo";
+    /** @hide */public static final String COUNTRYCODE_ITEM_DEFAULT_RING = "setDefaultRing";
+    /** @hide */public static final String COUNTRYCODE_ITEM_DEFAULT_NOTIFACTION = "setDefaultNotifaction";
+    //wangshaohu@wind-mobil.com 20170411 add end
+
+    // wangzhijie@wind-mobi.com 2017/1/3 start
+    // feature #148474 change sim
+    /** @hide */ public static final String COUNTRYCODE_ITEM_USER_REMEMBER_SIM = "UserRememberSim";
+    // wangzhijie@wind-mobi.com 2017/1/3 end
+
+    //liqiquan@wind-mobi.com 20170104 add start
+    public static final String COUNTRYCODE_ITEM_GROUP_MMS_ENABLED= "enableGroupMms";
+    public static final String COUNTRYCODE_ITEM_MAX_MESSAGE_SIZE= "maxMessageSize";
+    public static final String COUNTRYCODE_ITEM_SMS_TO_MMS_TEXT_THRESHOLD= "smsToMmsTextThreshold";
+    /** @hide */public static final String COUNTRYCODE_ITEM_SMS_USES_SIMPLE_CHARACTERS_ONLY= "smsUsesSimpleCharactersOnly";
+    //liqiquan@wind-mobi.com 20170104 add end
+
+    //yuanzhiqiang@wind-mobi.com add 2017-01-05 start
+    public static final String COUNTRYCODE_ITEM_MCCFOR2GONLY = "Mccfor2GOnlyDisable";
+    public static final String COUNTRYCODE_ITEM_MNCFOR2GONLY = "Mncfor2GOnlyDisable";
+    public static final String COUNTRYCODE_ITEM_MNCFORLTEONLYENABLE = "MncForLETOnlyEnable";
+    //yuanzhiqiang@wind-mobi.com add 2017-01-06 end
+
+    //xiangjuncheng@wind-mobi.com 2017/1/5 start
+    //fix Feature#149868 add E-label-->
+    /** @hide */ public static final String COUNTRYCODE_ITEM_ADD_ELABEL= "AddElabel";
+    //fix Feature#149893 Long click EmergencyButton call 112-->
+    /** @hide */ public static final String COUNTRYCODE_ITEM_LONG_EMERGENCY= "LongEmergency";
+    //fix countrycode name
+    /** @hide */ public static final String COUNTRYCODE_COUNTRY_APK= "CountryApk";
+    //xiangjuncheng@wind-mobi.com 2017/1/5 end
+    //fankaijian@wind-mobi.com 20170106 start
+    /** @hide */public static final String COUNTRYCODE_ITEM_WIfF_ENtERPRISE_SECURITY = "WifiEnterpriseSecurity";
+    /** @hide */public static final String EAP_SIM_SUPPORT = "EapSimSupport";
+    //fankaijian@wind-mobi.com 20170106 end
+    //fankaijian@wind-mobi.com 20170421 start
+    // fix bug, PANELL-2419
+    /** @hide */public static final String USE_CLEAR_CODE = "UseClearCode";
+    //fankaijian@wind-mobi.com 20170421 end
+
+    //zhengzhe@wind-mobi.com 20170117 for Feature#148467 start
+    /** @hide */public static final String SATISFY_ADD_DISTANCE_CODE = "SatisfyAddDistanceCode";
+    //zhengzhe@wind-mobi.com 20170117 end
+
+//    zhengzhe@wind-mobi.com 20170717 fix PANELL-3409 start
+//    Do not show Error081 or Error041 message / notification when wifi router disconnect
+    /** @hide */public static final String DONOT_SHOW_ERROR_MESSAGE_WHEN_WIFI_DISCONNCT = "DonotShowErrorMessageWhenWifiRouterDisconnect";
+//    zhengzhe@wind-mobi.com 20170717 end
+
+    //yexumin@wind-mobi.com add 20170206 start
+    //fix feature 152698
+    /** @hide */public static final String COUNTRYCODE_ITEM_TIM_VOLTE_WFC_ICON = "TimVolteWFCIcon";
+    //yexumin@wind-mobi.com add 20170206 end
+
+    //yexumin@wind-mobi.com add 20170310 start
+    //fix bug, panell-1035
+    /** @hide */public static final String COUNTRYCODE_QUERY_NETWORKS_WITHOUT_ACT = "QueryNetworksWithoutACT";
+    //yexumin@wind-mobi.com add 20170310 end
+
+    //yexumin@wind-mobi.com add 20170502 start
+    //fix bug, panell-2590
+    /** @hide */public static final String COUNTRYCODE_CALLER_ID_MATCH = "CallerIDMatch";
+    //yexumin@wind-mobi.com add 20170502 end
+
+    //lijingwei@wind-mobi.com 2017/4/8 start
+    //fix PANELL-2167 The APN for IMS is visible to the user and can be changed
+    /** @hide */public static final String COUNTRYCODE_HIdE_IMS_APN = "HideIMSApn";
+    //fix PANELL-2149 The VoLTE icon is wrong
+    /** @hide */public static final String COUNTRYCODE_CHANGE_VOLTE_ICON = "ChangeVolteIcon";
+    //fix Feature #158583 Network indicator 3G+
+    /** @hide */public static final String COUNTRYCODE_ADD_THREE_G_PLUS = "AddThreeGPlus";
+    //fix Feature #158480 The name of the Cellular Network displayed
+    /** @hide */public static final String COUNTRYCODE_CUSTOMIZE_NETWORK_NAME = "CustomizeNetworkName";
+    //fix Feature #160726 use LTE icon/text instead 4G in all places-notification bar, network type ect.
+    /** @hide */public static final String COUNTRYCODE_CHANGE4G_TO_LTE = "Change4GToLTE";
+    //fix Feature #161089 HD Voice info(show Icon in display):disabled
+    /** @hide */public static final String COUNTRYCODE_HIDE_HD_ICON = "HideHDIcon";
+    //fix Feature #161145 set the default network selection mode to value:3G/2G
+    /** @hide */public static final String COUNTRYCODE_PREFERRED_NETWORK_TYPE_3G = "PreferredNetworkType3G";
+    //lijingwei@wind-mobi.com 2017/4/8 end
+    //yuanzhiqiang@wind-mobi.com add 2017-03-30 start
+    /** @hide */private static final String COUNTRYCODE_ITEM_LOCATION_MODE_VALUE = "LocationModeValue";
+    //yuanzhiqiang@wind-mobi.com add 2017-03-30 end
+    // liuyangyao@wind-mobi.com add 2017/4/1 begin
+    /** @hide */public static final String COUNTRYCODE_ITEM_CHROMEBOOKMARKICONS = "ChromeBookmarkIcons";
+    /** @hide */public static final String COUNTRYCODE_ITEM_CHROMEBOOKMARK_FOLDER_NAME = "ChromeBookmarkFolderName";
+    // liuyangyao@wind-mobi.com add 2017/4/1 end
+
+    //liuxiaoshuan@wind-mobi.com add 20170406 start
+    /** @hide */public static final String COUNTRYCODE_SMSSC_ONLY_NUM = "smsServiceCenterOnlyNum";
+    /** @hide */public static final String COUNTRYCODE_ITEM_SILENT_CMAS_VIBRATE = "silentcmasvibrate";
+    //liuxiaoshuan@wind-mobi.com add 20170406 end
+	
+	/** @hide */public static final String COUNTRYCODE_SHOW_INTER_ROAMING = "ShowInternationalRoamingTips";
+    //chenshu@wind-mobi.com 2017.04.26 add for feature #164829 start
+    /** @hide */public static final String COUNTRYCODE_ITEM_MMS_ROAMING_AUTO_RETRIEVE_BY_DEFAULT= "mmsRoamingAutoRetrieveByDefault";
+    //chenshu@wind-mobi.com 2017.04.26 add for feature #164829 end
+
+    /** @hide */public static final String COUNTRYCODE_MCC_HIDE_SHOW_APKS= "MCCHideAndShowApks";
+    /** @hide */public static final String COUNTRYCODE_CHANNEL_RING_DIR= "ChannelRingDir";
+    /** @hide */public static final String COUNTRYCODE_ADD_WALLPAPERS = "AddWallpapers";
+	//yuanzhiqiang@wind-mobi.com add 2017/05/12  start
+    /** @hide */public static final String COUNTRYCODE_STORAGE_UI_FORMAT= "StorageUiFormat";
+    //value check java.text.DateFormat
+    /** @hide */public  static  final String COUNTRYCODE_FULL_DATE_FORMAT_WITHNOT_YEAR ="FullDateFormatWithnotYear";
+    //yuanzhiqiang@wind-mobi.com add 2017/05/12  end
+    //xiangkezhu@wind-mobi.com 2017/05/15 #bug panell-2143 modify location mode for bouyfr carrier start
+    /** @hide */public static final String COUNTRYCODE_LOCATION_MODE_HIGH_ACCURACY = "LocationModeHighAccuracy";
+    //xiangkezhu@wind-mobi.com 2017/05/15 end
+
+    /** @hide */public static final String COUNTRYCODE_SUPPORT_DOWNLOAD_REMOVE_NV ="SupportDownloadRemoveNV";
+
+    //yexumin@wind-mobi.com add 20171204 start
+    //fix bug, panell-3620
+    /** @hide */public static final String COUNTRYCODE_DISABLE_PHONE_RECORD = "DisablePhoneRecord";
+    //yexumin@wind-mobi.com add 20171204 end
+    /*
+    *Alwalys get CountryCode
+    */
+    public static String getCountryCode() {
+        String code = SystemProperties.get("ro.carrier");
+        //Log.d("JerryLiu", "getCountryCode code = " + code);
+        
+        if (code == null || code.equals("noset") || code.length() <= 0) {
+            return null;
+        }
+
+        return code;
+    }
+
+    /*
+    *Just get CountryCode once, after Recover model
+    *For boot service
+    */
+    public static String getCountryCodeOnce() {
+        String fileName = "/cache/recovery/last_factory";
+        File file = new File(fileName);        
+        if(file.exists()) {
+            //Log.d("JerryLiu", "CountryCodeUtils getCountryCodeOnce no pa isExist");
+            ReadWriteFile.writeFile("no", COUNTRYCODE_FLAG_PATH);
+        }
+        
+        String only = ReadWriteFile.readFile(COUNTRYCODE_FLAG_PATH);
+        //Log.d("JerryLiu", "CountryCodeUtils getCountryCodeOnce only = " + only);
+
+        if (only != null && only.equals("yes")) {
+            return null;
+        }
+
+        return getCountryCode();
+    }
+
+    /*
+    *For normal
+    */
+    public static String getCountryCodeOnce(Context context) {
+        String only = Settings.System.getString(context.getContentResolver(), COUNTRYCODE_FLAG_PATH);
+        //Log.d("JerryLiu", "CountryCodeUtils getCountryCodeOnce only = " + only);
+                
+        if (only != null && only.equals("yes")) {
+            return null;
+        }
+
+        return getCountryCode();
+    }
+
+    //xiangjuncheng@wind-mobi.com 2017/1/9 start
+    //get CountryName eg:CN
+    public static String getCountryName() {
+        String code = SystemProperties.get("ro.product.countryn");
+        //Log.d("JerryLiu", "getCountryName code = " + code);
+
+        if (code == null || code.equals("noset") || code.length() <= 0) {
+            return null;
+        }
+
+        return code;
+    }
+    //xiangjuncheng@wind-mobi.com 2017/1/9 end
+
+    /*
+    *Hide Apks
+    */
+    public static String[] getHideAPKs() {
+        String ccode = getCountryCode();
+        //Log.d("JerryLiu", "getHideAPKs ccode = " + ccode);
+        if (ccode == null) {
+            return null;
+        }
+
+        String allApks = mCountryCodeConfig.get(COUNTRYCODE_ITEM_ALL_APK);
+        String showApks = mCountryCodeConfig.get(COUNTRYCODE_ITEM_SHOW_APK);
+        //Log.d("JerryLiu", "getHideAPKs allApks = " + allApks + ", showApks = " + showApks);
+        //xiangjuncheng@wind-mobi.com 2017/1/9 start
+        //add country apk
+        String countryName = getCountryName();
+        String countryApks =  mCountryCodeConfig.get(COUNTRYCODE_COUNTRY_APK);
+        //Log.d("JerryLiu", "getHideAPKs countryName = " + countryName + " , countryApks = " + countryApks);
+        if(countryApks != null){
+            for (String countryApk : countryApks.split(";")){
+                //Log.d("JerryLiu", "countryApk  = " + countryApk);
+                if (countryName != null && countryApk.startsWith(countryName)){
+                    String addApk = countryApk.split(":")[countryApk.split(":").length-1];
+                    if (showApks == null){
+                        showApks = addApk;
+                    }else {
+                        showApks = showApks+","+addApk;
+                    }
+                    //Log.d("JerryLiu", "addApk = " + addApk+" , showApks = "+showApks);
+                    break;
+                }
+            }
+        }
+        //xiangjuncheng@wind-mobi.com 2017/1/9 end
+        if (allApks == null) {
+            return null;
+        } else if (showApks == null) {            
+            return allApks.split(",");
+        }
+        
+        String[] apks = showApks.split(",");
+        for (int i = 0; i < apks.length; i++) {
+            allApks = allApks.replace(apks[i], "");
+            //Log.d("JerryLiu", "getHideAPKs allApks = " + allApks);
+        }
+        //huangfei@wind-mobi.com 2017.03.17 start
+        String countryHideApks =  mCountryCodeConfig.get(COUNTRYCODE_ITEM_COUNTRYHIDEAPK);
+        if(countryHideApks != null){
+            Log.d("huangfei","countryHideApks ="+countryHideApks);
+            for (String countryHideApk : countryHideApks.split(";")){
+                if (countryName != null && countryHideApk.startsWith(countryName)){
+                    String hideApk = countryHideApk.split(":")[countryHideApk.split(":").length-1];
+                    allApks = allApks+","+hideApk;
+                    break;
+                }
+            }
+        }
+        //huangfei@wind-mobi.com 2017.03.17 end
+        return allApks.split(",");
+    }
+    //chenjinfa@wind-mobi.com add 2016/12/12  start
+    /*
+     *setup timezone
+     */
+    private static void setTimezone(){
+        String timeZ = mCountryCodeConfig.get(COUNTRYCODE_ITEM_TIMEZONE);;
+        if (timeZ == null || timeZ.length() <= 0) {
+            return;
+        }
+        SystemProperties.set("persist.sys.timezone", timeZ);
+    }
+
+    //chenjinfa@wind-mobi.com add 2016/12/12  end
+    //yuanzhiqiang@wind-mobi.com add 2017/03/30  start
+    /*
+     *setup locationMode
+     */
+    private static void setlocationMode(Context context){
+        String mode = mCountryCodeConfig.get(COUNTRYCODE_ITEM_LOCATION_MODE_VALUE);;
+        if (mode == null || mode.length() <= 0) {
+            return;
+        }else {
+            android.provider.Settings.Secure.putInt(context.getContentResolver(), android.provider.Settings.Secure.LOCATION_MODE,Integer.valueOf(mode));
+        }
+    }
+    //yuanzhiqiang@wind-mobi.com add 2017/03/30  end
+
+    //huangfei@wind-mobi.com 2016.12.13 start
+    public static boolean getBooleanValue(String key){
+        String ccode = getCountryCode();
+        Log.d("huangfei", "getBooleanValue_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return false;
+        }
+        String bool = mCountryCodeConfig.get(key);
+        if(bool == null){
+            return false;
+        }
+        Log.d("huangfei", "getBooleanValue_" + key + "_bool = " + bool);
+        return bool.equals("yes")?true:false;
+    }
+
+    public static boolean getBooleanValueOnce(Context context,String key){
+        String ccode = getCountryCodeOnce(context);
+        Log.d("huangfei", "getBooleanValueOnce_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return false;
+        }
+        String bool = mCountryCodeConfig.get(key);
+        if(bool == null){
+            return false;
+        }
+        Log.d("huangfei", "getBooleanValueOnce_" + key + "_bool = " + bool);
+        return bool.equals("yes")?true:false;
+    }
+
+    public static String getStringValue(String key){
+        String ccode = getCountryCode();
+        Log.d("huangfei", "getStringValue_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return null;
+        }
+        String str = mCountryCodeConfig.get(key);
+        Log.d("huangfei", "getStringValue_" + key + "_str= " + str);
+        //yexumin@wind-mobi.com add 20171009 start
+        if (COUNTRYCODE_CHANGE4G_TO_LTE.equals(key) && WindFeatureOptions.WIND_DEF_OPTR_A158_EMEAD_1RAM) {
+            String mccmnc1="";
+            String mccmnc2="";
+            mccmnc1 = getTelephonyProperty(PhoneConstants.SIM_ID_1,TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+            mccmnc2 = getTelephonyProperty(PhoneConstants.SIM_ID_2,TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+            Log.d("huangfei", "yexm mccmnc1 = " + mccmnc1 + " | mccmnc2 = " + mccmnc2);
+            if ("26001".equals(mccmnc1) || "26001".equals(mccmnc2)) {
+                return "yes";
+            }
+        }
+        //yexumin@wind-mobi.com add 20171009 end
+        return str;
+    }
+
+    //yexumin@wind-mobi.com add 20171009 start
+    private static String getTelephonyProperty(int phoneId, String property, String defaultVal) {
+        String propVal = null;
+        String prop = SystemProperties.get(property);
+        Log.d("huangfei", "getTelephonyProperty prop value= " + prop);
+        if ((prop != null) && (prop.length() > 0)) {
+            String values[] = prop.split(",");
+            if ((phoneId >= 0) && (phoneId < values.length) && (values[phoneId] != null)) {
+                propVal = values[phoneId];
+            }
+        }
+        return propVal == null ? defaultVal : propVal;
+    }
+    //yexumin@wind-mobi.com add 20171009 end
+
+    public static String getStringValueOnce(Context context,String key){
+        String ccode = getCountryCodeOnce(context);
+        Log.d("huangfei", "getStringValueOnce_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return null;
+        }
+        String str = mCountryCodeConfig.get(key);
+        Log.d("huangfei", "getStringValueOnce_" + key + "_str= " + str);
+        return str;
+    }
+
+    public static String[] getStringArrayValue(String key){
+        String ccode = getCountryCode();
+        Log.d("huangfei", "getStringArrayValue_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return null;
+        }
+        String str = mCountryCodeConfig.get(key);
+        if(str == null ){
+            return null;
+        }
+        Log.d("huangfei", "getStringArrayValue_" + key + "_str= " + str);
+        return str.split(",");
+    }
+
+    public static String[] getStringArrayValueOnce(Context context,String key){
+        String ccode = getCountryCodeOnce(context);
+        Log.d("huangfei", "getStringArrayValueOnce_" + key + "_ccode = " + ccode);
+        if (ccode == null) {
+            return null;
+        }
+        String str = mCountryCodeConfig.get(key);
+        if(str == null ){
+            return null;
+        }
+        Log.d("huangfei", "getStringArrayValueOnce_" + key + "_str= " + str);
+        return str.split(",");
+    }
+    //huangfei@wind-mobi.com add 2016.12.13 end
+
+    public static String getDefaultInputMethod(boolean isPackage) {
+        if (getCountryCode() == null) {
+            return null;
+        }
+        String method = mCountryCodeConfig.get(COUNTRYCODE_ITEM_DEFAULT_INPUT_METHOD);
+
+        if (isPackage && method != null && method.contains("/")) {
+            return method.split("/")[0];
+        } 
+
+        return method;
+    }
+
+    // wangzhijie@wind-mobi.com 2016/12/29 start
+    // feature #148474 change sim
+
+    private static String getConfigInternal(String key) {
+        if (key == null || key.isEmpty()) {
+            return "";
+        }
+
+        if (getCountryCode() == null) {
+            return "";
+        }
+        String value = mCountryCodeConfig.get(key);
+        if (value == null || value.isEmpty()) {
+            return "";
+        }
+
+        return value;
+    }
+
+    private static boolean getBooleanConfigInternal(String key) {
+        String configValue = getConfigInternal(key);
+        return "true".equalsIgnoreCase(configValue)
+                || "yes".equalsIgnoreCase(configValue);
+    }
+
+    /** @hide */
+    final public static boolean needChangeSim() {
+        return getBooleanConfigInternal("DialingChangeSim");
+    }
+
+    // wangzhijie@wind-mobi.com 2016/12/29 end
+
+    /*
+    *Parse _config.xml
+    *keyArray could be null
+    */
+    public static void parseCountryCodeList(Map<String, String> map, ArrayList<String> keyArray, String path) {
+        FileReader fileReader;
+        
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = factory.newPullParser();
+            if (parser == null) {
+                return;
+            }
+            File fileCheck = new File(path);
+            if (fileCheck.exists()) {
+                fileReader = new FileReader(path);
+            } else {
+                return;
+            }
+            parser.setInput(fileReader);       
+
+            for (int type = parser.next(); type != XmlPullParser.END_DOCUMENT; type = parser.next()) {
+                if (XmlPullParser.START_TAG != type) {
+                    continue;
+                }
+
+                if (parser.getName().equals("item")) {
+                    String map_key = "";
+                    String map_value = "";
+                    int attrNum = parser.getAttributeCount();                            
+                    for (int i = 0; i < attrNum; ++i) {
+                        String name = parser.getAttributeName(i);
+                        String value = parser.getAttributeValue(i);                        
+                        if (name.equals("name")) {
+                            map_key = value;
+                        } else if (name.equals("value")) {
+                            map_value = value;
+                        } 
+                    }
+
+                    map.put(map_key, map_value);
+                    //Log.d("JerryLiu", "CountryCodeUtils parseCountryCodeList map_key = " + map_key + ", map_value = " + map_value);
+                    if (keyArray != null) {
+                        keyArray.add(map_key);
+                    }
+                }                
+            }
+            fileReader.close();
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*
+    *SystemService initialize CountryCode config and    
+    *set only once
+    */
+    public static void initCountryConfig() {
+        String ccode = getCountryCode();
+        //zhengxingshuang@wind-mobi.com 20170303 start
+        String cName = getCountryName();
+        if (ccode == null) {
+            return;
+        }
+
+        parseCountryCodeList(mCountryCodeConfig, null, COUNTRYCODE_COMMON_PATH);
+        parseCountryCodeList(mCountryCodeConfig, null, COUNTRYCODE_CONFIG_PATH + ccode.toLowerCase() + COUNTRYCODE_CONFIG_PATH_SUFFIX);
+        //for ECC call list
+        if (cName == null) {
+            return;
+        }
+        parseCountryCodeList(mCountryCodeConfig, null, COUNTRYCODE_CONFIG_PATH + cName.toLowerCase() + COUNTRYCODE_CONFIG_PATH_SUFFIX);
+        //zhengxingshuang@wind-mobi.com 20170303 end
+    }
+
+    public static void setCountryCodeFlag(Context context) {
+        String ccode = getCountryCodeOnce();
+        if (ccode == null) {
+            context.registerReceiver(new BroadcastReceiver(){
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        ReadWriteFile.writeFile("no", COUNTRYCODE_FLAG_PATH);
+                    }
+                }, new IntentFilter("android.intent.action.MASTER_CLEAR"));
+            
+            return;
+        }
+        setTimezone();
+        //yuanzhiqiang@wind-mobi.com add 2017/03/30  start
+        setlocationMode(context);
+        //yuanzhiqiang@wind-mobi.com add 2017/03/30  end
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SHUTDOWN);
+        filter.addAction("android.intent.action.ACTION_SHUTDOWN_IPO");
+        filter.addAction("android.intent.action.MASTER_CLEAR");
+        context.registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (intent.getAction().equals("android.intent.action.MASTER_CLEAR")) {
+                    ReadWriteFile.writeFile("recover", COUNTRYCODE_FLAG_PATH);
+                } else {
+                    String val = ReadWriteFile.readFile(COUNTRYCODE_FLAG_PATH);
+                    if (val != null && val.equals("recover")) {
+                        ReadWriteFile.writeFile("no", COUNTRYCODE_FLAG_PATH);
+                    } else {
+                        Settings.System.putString(context.getContentResolver(), COUNTRYCODE_FLAG_PATH, "yes");
+                        ReadWriteFile.writeFile("yes", COUNTRYCODE_FLAG_PATH);
+                    }
+                }
+            }
+        }, filter);
+    }
+    //yuanzhiqiang@wind-mobi.com add 2017-01-05 start
+    public static List<String> getListByKey(final String featureKey, final String filterStr) {
+        String simInfoValue = getStringValue(featureKey);
+        if(simInfoValue == null) return null;
+
+        String[] strs = simInfoValue.split(filterStr);
+        if(strs.length <= 0) return null;
+
+        List<String> mList = new ArrayList<String>();
+        for(int i=0; i<strs.length; i++){
+            mList.add(strs[i]);
+        }
+        return mList;
+    }
+    //yuanzhiqiang@wind-mobi.com add 2017-01-05 end
+
+    private static class ReadWriteFile {
+        public static String readFile(String path) {
+            String buf = null;
+            if (path == null) {
+                return null;
+            }
+            //Log.d("JerryLiu", "CountryCodeUtils readFile path = " + path);
+            try {
+                File file= new File(path);
+                if(!file.exists()){
+                    file.createNewFile();
+                    return buf;
+                }
+            
+                byte[] bytes = new byte[256];
+                InputStream is = new FileInputStream(path);
+                int count = is.read(bytes);
+                is.close();
+                if (count > 0) {
+                    buf = new String(bytes, 0, count);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException ie) {
+                ie.printStackTrace();
+            }
+
+            return buf;
+        }
+
+        public static void writeFile(String vals, String path) {
+            if (vals == null || path == null) {
+                return;
+            }
+
+            File file = new File(path); 
+            //Log.d("JerryLiu", "CountryCodeUtils readFile path = " + path + ", vals = " + vals);
+            try {
+                FileWriter fw;
+                fw = new FileWriter(file);
+                fw.write(vals);
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void hideMCCApk(TelephonyManager tm, Context context) {
+        String[] mccApks = getStringValue(COUNTRYCODE_MCC_HIDE_SHOW_APKS).split(";");
+        String mcc[] = getMcc(tm);
+        if (mcc == null) {
+            Log.d("JerryLiu", "CountryCodeUtils hideMCCApk mcc is null");
+            return;
+        }
+
+        String showApk = null;
+
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < mccApks.length; k++) {
+                Log.d("JerryLiu", "CountryCodeUtils hideMCCApk mccApks[" + k + "] = " + mccApks[k] + ", mcc[" + i + "] = " + mcc[i]);
+                if (mcc[i] != null && mccApks[k] != null && mccApks[k].startsWith(mcc[i])) {
+                    if (showApk == null) {
+                        showApk = mccApks[k].split(":")[1];
+                    } else {
+                        showApk = showApk + "," + mccApks[k].split(":")[1];
+                    }
+                    mccApks[k] = null;
+                }
+
+                Log.d("JerryLiu", "CountryCodeUtils hideMCCApk mccApks[" + k + "] = " + mccApks[k] + ", showApk = " + showApk);
+            }
+        }
+
+        PackageManager packageManager = context.getPackageManager();
+        if (showApk != null) {
+            for (String apk : showApk.split(",")) {
+                try {
+                    Log.d("JerryLiu", "CountryCodeUtils hideMCCApk show apk = " + apk);
+                    packageManager.setApplicationEnabledSetting(apk, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+                } catch(Exception e) {
+                    Log.d("JerryLiu", "CountryCodeUtils hideMCCApk e = " + e);
+                }
+            }
+        }
+        /*for (int i = 0; i < mccApks.length; i++) {
+            if (mccApks[i] == null) {
+                Log.d("JerryLiu", "CountryCodeUtils hideMCCApk continue");
+                continue;
+            }
+            String showApks = mccApks[i].split(":")[1];
+            for (String apk : showApks.split(",")) {
+                try {
+                    Log.d("JerryLiu", "CountryCodeUtils hideMCCApk hide apk = " + apk);
+                    packageManager.setApplicationEnabledSetting(apk, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                } catch(Exception e) {
+                    Log.d("JerryLiu", "CountryCodeUtils hideMCCApk e = " + e);
+                }
+            }
+        }*/
+    }
+
+    private static String[] getMcc(TelephonyManager tm) {
+        String[] mcc = new String[2];
+        int mccFlag = 0;
+        
+        for (int i = 0; i < 2; i++) {
+            String mccmnc = tm.getSimOperatorNumericForPhone(i);
+            if (mccmnc != null && mccmnc.length() >= 3) {
+                String m = mccmnc.substring(0, 3);
+                mcc[i] = m;
+                
+                Log.d("JerryLiu", "CountryCodeUtils getMcc getSimOperatorNumericForPhone mcc[" + i + "] = " + mcc[i]);
+            } else {
+                mccFlag++;
+            }
+        }
+
+        Log.d("JerryLiu", "CountryCodeUtils getMcc mccFlag = " + mccFlag);
+
+        if (mccFlag >= 2) {
+            return null;
+        }
+
+        return mcc;
+    }
+
+    public static void mccBroadcast(Context context) {
+        String ccode = getCountryCode();
+        Log.d("JerryLiu", "CountryCodeUtils mccBroadcast");
+        if (ccode == null || getStringValue(COUNTRYCODE_MCC_HIDE_SHOW_APKS) == null) {            
+            return;
+        }
+
+        hideAllMCCApk(context);
+        
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SHUTDOWN);
+        filter.addAction("android.intent.action.SIM_STATE_CHANGED");
+//        zhengzhe@wind-mobi.com 20170630 start
+//        fix Bug#171361 hide Wun Zinn and Ban Keyboard applications at guest mode
+        filter.addAction(Intent.ACTION_USER_SWITCHED);
+//        zhengzhe@wind-mobi.com 20170630 end
+        Log.d("JerryLiu", "CountryCodeUtils mccBroadcast register SIM_STATE_CHANGED");
+        
+        context.registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+//        zhengzhe@wind-mobi.com 20170630 start
+//        fix Bug#171361 hide Wun Zinn and Ban Keyboard applications at guest mode
+//              Log.d("zhengzhe", "CountryCodeUtils + action = " + intent.getAction())
+                /* zhangheting@wind-mobi.com modify 20170925 start */
+                if (Intent.ACTION_USER_SWITCHED.equals(intent.getAction()) && WindFeatureOptions.WIND_DEF_OPTR_A158_APD) {
+                /* zhangheting@wind-mobi.com modify 20170925 end */
+                    final int currentUserId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, -1);
+//                    Log.d("zhengzhe", "CountryCodeUtils + currentuserid = " + currentUserId);
+                    int hostUserID = 0;
+                    if (currentUserId != hostUserID) {
+//                        Log.d("zhengzhe", "CountryCodeUtils + current user is guest");
+                        hideAllMCCApkForGuestUser(currentUserId);
+                    }
+                }
+//        zhengzhe@wind-mobi.com 20170630 end
+                if (intent.getAction().equals("android.intent.action.SIM_STATE_CHANGED")) {
+                    TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);                    
+                    if (tm != null) {
+                        int state = tm.getSimState();
+                        Log.d("JerryLiu", "CountryCodeUtils setCountryCodeFlag ccode = " + getCountryCode() + ", state = " + state);
+
+                        if (TelephonyManager.SIM_STATE_READY == state) {
+                            hideMCCApk(tm, context);
+                        }
+                    }
+                }
+            }
+        }, filter);
+    }
+
+//    zhengzhe@wind-mobi.com 20170630 start
+//    fix Bug#171361 hide Wun Zinn and Ban Keyboard applications at guest mode
+    private static void hideAllMCCApkForGuestUser(int currentGuestUserId) {
+//        Log.d("zhengzhe", "CountryCodeUtils + hideAllMCCApkForGuestUser");
+        String[] mccApks = getStringValue(COUNTRYCODE_MCC_HIDE_SHOW_APKS).split(";");
+        if (mccApks == null) {
+//            Log.d("zhengzhe", "CountryCodeUtils + hideAllMCCApkForGuestUser + mccApks == null");
+            return;
+        }
+
+        IPackageManager mPm = IPackageManager.Stub.asInterface(ServiceManager.getService("package"));
+        for (int i = 0; i < mccApks.length; i++) {
+            String showApks = mccApks[i].split(":")[1];
+            for (String apk : showApks.split(",")) {
+                try {
+//                    Log.d("zhengzhe", "CountryCodeUtils hideAllMCCApk hide apk = " + apk);
+                    mPm.setApplicationHiddenSettingAsUser(apk, true, currentGuestUserId);
+                } catch(Exception e) {
+                    Log.d("zhengzhe", "CountryCodeUtils hideAllMCCApkForGuestUser e = " + e);
+                }
+            }
+        }
+    }
+//    zhengzhe@wind-mobi.com 20170630 end
+
+    private static void hideAllMCCApk(Context context) {
+        String[] mccApks = getStringValue(COUNTRYCODE_MCC_HIDE_SHOW_APKS).split(";");
+        if (mccApks == null) {
+            return;
+        }
+
+        PackageManager packageManager = context.getPackageManager();
+        for (int i = 0; i < mccApks.length; i++) {
+            String showApks = mccApks[i].split(":")[1];
+            for (String apk : showApks.split(",")) {
+                try {
+                    Log.d("JerryLiu", "CountryCodeUtils hideAllMCCApk hide apk = " + apk);
+                    packageManager.setApplicationEnabledSetting(apk, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                } catch(Exception e) {
+                    Log.d("JerryLiu", "CountryCodeUtils hideAllMCCApk e = " + e);
+                }
+            }
+        }
+    }
+}
+//liuqiong@wind-mobi.com add 2016-12-06 end

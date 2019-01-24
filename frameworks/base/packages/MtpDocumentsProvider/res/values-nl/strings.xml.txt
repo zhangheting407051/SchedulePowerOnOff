@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP-host</string>
+    <string name="downloads_app_label">Downloads</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Bestanden uit &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; openen</string>
+    <string name="error_busy_device">Het andere apparaat is bezig. U kunt pas bestanden overbrengen tot het beschikbaar is.</string>
+    <string name="error_locked_device">Geen bestanden gevonden. Het andere apparaat is mogelijk vergrendeld. Zo ja, ontgrendel het apparaat en probeer het opnieuw.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

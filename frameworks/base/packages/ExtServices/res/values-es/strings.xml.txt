@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Biblioteca de servicios de Android</string>
+    <string name="notification_ranker">Servicio de clasificación de notificaciones de Android</string>
+    <string name="notification_ranker_autobundle_explanation">Agrupación automática actualizada por el servicio de clasificación</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

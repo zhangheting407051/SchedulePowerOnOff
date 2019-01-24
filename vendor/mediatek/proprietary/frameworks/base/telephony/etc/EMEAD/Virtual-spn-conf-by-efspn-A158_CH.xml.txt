@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<virtualSpnOverridesByEfSpn version="1">
+<virtualSpnOverride mccmncspn="26207Alice" name="Alice"/>
+<virtualSpnOverride mccmncspn="20801Virgin" name="VM MMS"/>
+<virtualSpnOverride mccmncspn="22210ERG" name="ErgMobile WAP"/>
+<virtualSpnOverride mccmncspn="310960nntcwire" name="Nntcwire"/>
+<virtualSpnOverride mccmncspn="20404U.S. Cellular" name="U.S. Cellular"/>
+<virtualSpnOverride mccmncspn="732111Uff!" name="UFFMOVIL"/>
+<virtualSpnOverride mccmncspn="20404中国电信" name="中国电信互联网"/>
+<virtualSpnOverride mccmncspn="310000Peopleswire" name="Peopleswire"/>
+<virtualSpnOverride mccmncspn="23415TalkTalk" name="TalkTalk"/>
+<virtualSpnOverride mccmncspn="311670pinebelt" name="Pinebelt"/>
+<virtualSpnOverride mccmncspn="310000revol" name="Revol"/>
+<virtualSpnOverride mccmncspn="311310leaco" name="Leaco"/>
+<virtualSpnOverride mccmncspn="31150024-7 Wireless RPA" name="24-7 WAP AT&amp;T"/>
+<virtualSpnOverride mccmncspn="732111movil exito" name="Internet Éxito"/>
+<virtualSpnOverride mccmncspn="732103Uff!" name="UFFMOVIL"/>
+<virtualSpnOverride mccmncspn="20404HOT mobile" name="HOT mobile MMS"/>
+<virtualSpnOverride mccmncspn="310470ntelos" name="nTelos Tether"/>
+<virtualSpnOverride mccmncspn="311450ptci" name="Ptci"/>
+<virtualSpnOverride mccmncspn="20810Leclerc Mobile" name="WAP Leclerc mobile"/>
+<virtualSpnOverride mccmncspn="330120Open Mobile" name="Openmobile Tether"/>
+<virtualSpnOverride mccmncspn="22299FASTWEB" name="Fastweb"/>
+<virtualSpnOverride mccmncspn="31150024-7 Wireless RPT" name="24-7 WAP T-Mobile"/>
+<virtualSpnOverride mccmncspn="31150024-7 Wireless RPO" name="24-7 WAP Other networks"/>
+<virtualSpnOverride mccmncspn="311650unitedwireless" name="unitedwireless"/>
+<virtualSpnOverride mccmncspn="72201QUAM" name="Quam_MMS"/>
+<virtualSpnOverride mccmncspn="23415ASDA Mobile" name="ASDA Mobile"/>
+<virtualSpnOverride mccmncspn="20601AT&amp;T" name="Internet"/>
+<virtualSpnOverride mccmncspn="23820DLG" name="DLG Internet"/>
+<virtualSpnOverride mccmncspn="310580Inland Cellular" name="Inland Tether"/>
+<virtualSpnOverride mccmncspn="262021&amp;1" name="1&amp;1"/>
+<virtualSpnOverride mccmncspn="21403Ibercom" name="Ibercom Internet"/>
+<virtualSpnOverride mccmncspn="311430chatmobrsa1" name="Chatmobrsa1"/>
+<virtualSpnOverride mccmncspn="311070elementmobile" name="Elementmobile"/>
+<virtualSpnOverride mccmncspn="21406Hits" name="MMS Hits"/>
+<virtualSpnOverride mccmncspn="310032itewire" name="Itewire"/>
+<virtualSpnOverride mccmncspn="72201CELULAR" name="Quam_MMS"/>
+<virtualSpnOverride mccmncspn="20810RegloMobile" name="WAP RegloMobile"/>
+<virtualSpnOverride mccmncspn="732103UNE" name="UNE"/>
+<virtualSpnOverride mccmncspn="21406telecable" name="telecable MMS"/>
+<virtualSpnOverride mccmncspn="22233PosteMobile" name="PosteMobile"/>
+<virtualSpnOverride mccmncspn="23415Sainsbury's" name="Sainsbury's PAYG"/>
+<virtualSpnOverride mccmncspn="23426Lycamobile" name="Lycamobile"/>
+<virtualSpnOverride mccmncspn="311500Mosaic Mobile" name="Mosaic WAP"/>
+<virtualSpnOverride mccmncspn="310035etex" name="Etex"/>
+<virtualSpnOverride mccmncspn="20810LeclercMobile" name="WAP LeclercMobile"/>
+<virtualSpnOverride mccmncspn="20601AT&amp;T 4G" name="Internet"/>
+<virtualSpnOverride mccmncspn="732111ETB MOVIL" name="Internet ETB"/>
+<virtualSpnOverride mccmncspn="20810ZERO FORFAIT" name="Zero forfait MMS"/>
+<virtualSpnOverride mccmncspn="21403MASMovil" name="MASMovil Internet"/>
+<virtualSpnOverride mccmncspn="310430gci" name="Gci"/>
+<virtualSpnOverride mccmncspn="20601IUSACELL" name="Internet"/>
+<virtualSpnOverride mccmncspn="311100nextech" name="Nextech"/>
+<virtualSpnOverride mccmncspn="21405pepephone" name="MMS Pepephone"/>
+<virtualSpnOverride mccmncspn="302720chatr" name="Chatr Internet"/>
+<virtualSpnOverride mccmncspn="311340illinoisvalley" name="Illinois valley"/>
+<virtualSpnOverride mccmncspn="310000mobipcs" name="Mobipcs"/>
+<virtualSpnOverride mccmncspn="31150024-7 Wireless" name="24-7 WAP"/>
+<virtualSpnOverride mccmncspn="21403simyo" name="simyo MMS"/>
+<virtualSpnOverride mccmncspn="22201UNEFON 4G" name="Internet"/>
+<virtualSpnOverride mccmncspn="311340IVC" name="Illinois Valley"/>
+<virtualSpnOverride mccmncspn="310000Tracfone" name="Tracfone Internet"/>
+<virtualSpnOverride mccmncspn="20810Keyyo Mobile" name="Keyyo Mobile Wap"/>
+<virtualSpnOverride mccmncspn="21403RACC" name="RACC MMS"/>
+<virtualSpnOverride mccmncspn="65507Virgin" name="Virgin MMS"/>
+<virtualSpnOverride mccmncspn="302370MTS" name="MTS Internet S"/>
+<virtualSpnOverride mccmncspn="310960snakeriver" name="Snakeriver"/>
+<virtualSpnOverride mccmncspn="21403CABLE movil" name="CABLE movil Internet"/>
+<virtualSpnOverride mccmncspn="310000commnet" name="Commnet"/>
+<virtualSpnOverride mccmncspn="334030Virgin Mobile" name="Virgin Internet Movil"/>
+<virtualSpnOverride mccmncspn="310000mobilenation" name="Mobilenation"/>
+<virtualSpnOverride mccmncspn="21406Lowi" name="LOWI_MMS"/>
+<virtualSpnOverride mccmncspn="310050alaskacomm" name="Alaskacomm"/>
+<virtualSpnOverride mccmncspn="20601NRJ Mobile" name="NRJWEB"/>
+<virtualSpnOverride mccmncspn="23820Call me" name="Call me Internet"/>
+<virtualSpnOverride mccmncspn="311500Norvado Wireless RPA" name="Norvado AT&amp;T"/>
+<virtualSpnOverride mccmncspn="732103ETB MOVIL" name="Internet ETB"/>
+<virtualSpnOverride mccmncspn="21432Tuenti" name="Tuenti"/>
+<virtualSpnOverride mccmncspn="23410giffgaff" name="giffgaff"/>
+<virtualSpnOverride mccmncspn="23415Lebara" name="Lebara Internet"/>
+<virtualSpnOverride mccmncspn="20404C Spire" name="CSpire international"/>
+<virtualSpnOverride mccmncspn="310000mohave" name="Mohave"/>
+<virtualSpnOverride mccmncspn="20416Ben" name="Ben internet"/>
+<virtualSpnOverride mccmncspn="22201IUSACELL" name="Internet"/>
+<virtualSpnOverride mccmncspn="732111UNE" name="UNE"/>
+<virtualSpnOverride mccmncspn="302720ROGERS" name="Rogers Internet"/>
+<virtualSpnOverride mccmncspn="310960southcentral" name="Southcentral"/>
+<virtualSpnOverride mccmncspn="334020AZTECA MOVIL" name="Azteca Movil"/>
+<virtualSpnOverride mccmncspn="23801TELMORE" name="TELMORE WAP"/>
+<virtualSpnOverride mccmncspn="310570Cellular One" name="Cellular One Smartphone"/>
+<virtualSpnOverride mccmncspn="23415Talkmobile" name="Talkmob Internet"/>
+<virtualSpnOverride mccmncspn="21406Eroski Movil" name="MMS Eroski movil"/>
+<virtualSpnOverride mccmncspn="22201UNEFON" name="Internet"/>
+<virtualSpnOverride mccmncspn="310960silverstar" name="Silverstar"/>
+<virtualSpnOverride mccmncspn="21901bonbon" name="bonbon MMS"/>
+<virtualSpnOverride mccmncspn="310000peopleswire" name="peopleswire FOTA"/>
+<virtualSpnOverride mccmncspn="311530Blaze Wireless" name="Blaze"/>
+<virtualSpnOverride mccmncspn="732103movil exito" name="Internet Éxito"/>
+<virtualSpnOverride mccmncspn="20605Telenet" name="Telenet"/>
+<virtualSpnOverride mccmncspn="20601UNEFON 4G" name="Internet"/>
+<virtualSpnOverride mccmncspn="311410chatmobrsa2" name="Chatmobrsa2"/>
+<virtualSpnOverride mccmncspn="23410TalkTalk" name="TalkTalk"/>
+<virtualSpnOverride mccmncspn="21406EUSKALTEL" name="Euskaltel Internet"/>
+<virtualSpnOverride mccmncspn="302370CNT" name="CNT Internet"/>
+<virtualSpnOverride mccmncspn="311590gsc" name="Gsc"/>
+<virtualSpnOverride mccmncspn="311600cox" name="Cox"/>
+<virtualSpnOverride mccmncspn="311500Mosaic RPT" name="Mosaic WAP T-Mobile"/>
+<virtualSpnOverride mccmncspn="23410TESCO" name="Tesco Mobile"/>
+<virtualSpnOverride mccmncspn="22201Noverca" name="NOVERCA WEB"/>
+<virtualSpnOverride mccmncspn="22210PosteMobile" name="PosteMobile"/>
+<virtualSpnOverride mccmncspn="26201debitel" name="Telekom Internet"/>
+<virtualSpnOverride mccmncspn="302660MTS" name="MTS Internet"/>
+<virtualSpnOverride mccmncspn="310960syringa" name="Syringa"/>
+<virtualSpnOverride mccmncspn="23433LIFE" name="Internet"/>
+<virtualSpnOverride mccmncspn="21406pepephone" name="MMS"/>
+<virtualSpnOverride mccmncspn="310000flatwire" name="Flatwire"/>
+<virtualSpnOverride mccmncspn="311500Norvado Wireless RPO" name="Norvado Other networks"/>
+<virtualSpnOverride mccmncspn="310000distribution" name="Distribution"/>
+<virtualSpnOverride mccmncspn="311500Norvado Wireless RPT" name="Norvado T-Mobile"/>
+<virtualSpnOverride mccmncspn="204043Avantel Roaming" name="Avantel"/>
+<virtualSpnOverride mccmncspn="732123Virgin Mobile" name="Virgin Mobile"/>
+<virtualSpnOverride mccmncspn="21403JAZZTEL" name="MMS"/>
+<virtualSpnOverride mccmncspn="311500Mosaic RPA" name="Mosaic WAP AT&amp;T"/>
+<virtualSpnOverride mccmncspn="21407JAZZTEL" name="MMS"/>
+<virtualSpnOverride mccmncspn="22201AT&amp;T 4G" name="Internet"/>
+<virtualSpnOverride mccmncspn="23430Virgin" name="Virgin Media Mobile Internet"/>
+<virtualSpnOverride mccmncspn="310000bluewire" name="Bluewire"/>
+<virtualSpnOverride mccmncspn="311230cspire" name="CSpire"/>
+<virtualSpnOverride mccmncspn="72201Tuenti" name="Servicio_MMS"/>
+<virtualSpnOverride mccmncspn="20601UNEFON" name="Internet"/>
+<virtualSpnOverride mccmncspn="26801ZON" name="ZON MMS"/>
+<virtualSpnOverride mccmncspn="310330alltel2" name="Alltel2"/>
+<virtualSpnOverride mccmncspn="21406Lebara" name="Lebara MMS"/>
+<virtualSpnOverride mccmncspn="311500Mosaic RPO" name="Mosaic WAP Other networks"/>
+<virtualSpnOverride mccmncspn="310820nepa" name="Nepa"/>
+<virtualSpnOverride mccmncspn="22201AT&amp;T" name="Internet"/>
+<virtualSpnOverride mccmncspn="20601ETB 4G" name="ETB 4G"/>
+<virtualSpnOverride mccmncspn="302720CITYFONE" name="Cityfone Internet"/>
+<virtualSpnOverride mccmncspn="311500Norvado Wireless" name="Norvado"/>
+</virtualSpnOverridesByEfSpn>

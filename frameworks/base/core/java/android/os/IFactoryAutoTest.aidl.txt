@@ -1,0 +1,10 @@
+package android.os;
+
+/** {@hide} */
+interface IFactoryAutoTest {
+    void startLcdTest();
+    void testLed(int ct, int status);
+    void startKeyTest();
+    String getFailKeyValues();
+    boolean isSc(String code);
+}

@@ -1,0 +1,160 @@
+package com.mediatek.crossmount.adapter;
+
+import android.content.Context;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.util.Log;
+
+import com.mediatek.crossmount.adapter.CrossMountAdapter;
+import com.mediatek.crossmount.adapter.Service;
+
+
+/**
+ * The devices contains its name, type and its supported services.
+ */
+public final class Device {
+    static final String TAG = "CrossMountDevice";
+
+
+    private CrossMountAdapter mAdapter;
+    private String mDeviceId;
+    private String mDeviceName;
+    private Type mDeviceType;
+
+    /**
+     *  The device type.
+     */
+    public enum Type {
+        /**
+         * The invalid or unsupported device type.
+         */
+        INVALID,
+        /**
+         * The device type: Phone.
+         */
+        PHONE,
+        /**
+         * The device type: TV.
+         */
+        TV
+    }
+
+
+    Device(String deviceId, String deviceName, String deviceType, CrossMountAdapter adapter) {
+        //Log.d(TAG, "Device, id:" + deviceId + ",name:" + deviceName + ", type:" + deviceType);
+        mDeviceId = deviceId;
+        mDeviceName = deviceName;
+
+        if (deviceType != null){
+            mDeviceType = Type.valueOf(deviceType);
+        } else {
+            mDeviceType = Type.INVALID;
+        }
+
+        mAdapter = adapter;
+    }
+
+    /**
+     * Query the device Id. The Id is unique across Android devices.
+     * @return An ID for the devices.
+     */
+    public String getId() {
+        return mDeviceId;
+    }
+
+    /**
+     * Query the device name. The device name is to display on the UI menus for users.
+     * @return The device name.
+     */
+    public String getName() {
+        return mDeviceName; //mAdapter.getDeviceName(mDeviceId);
+    }
+
+    /**
+     * Query the device type.
+     * @return The device type.
+     */
+    public Type getType() {
+
+        return mDeviceType;
+    }
+
+    /**
+     * Set the device name. The users can modify the device name.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually set the device name.
+     * @param name The devices name.
+     * @return True if the name is set successfully
+     */
+    public boolean setName(String name) {
+
+        return mAdapter.setDeviceName(name);
+    }
+
+    /**
+     * Query the supported services of the device. When the supported services is updated,
+     * for example, an plug-in service registers the new service to CrossMount, the application can
+     * use the interface to query the updated supported service list.
+     * @return The supported service instances of the device
+     */
+    public Service[] getProviderServices() {
+
+        String[] serviceId = mAdapter.getProviderServices(mDeviceId);
+
+        Service[] services = new Service[serviceId.length];
+
+        int i = 0;
+        for (String id : serviceId) {
+            services[i] = new Service(id, this, mAdapter);
+            i++;
+        }
+        return services;
+    }
+
+    /**
+     * Remove the device from the trust list.
+     * <p>
+     * Only for use by the applications run with System UID. If not, CrossMount framework will
+     * display a dialog to guide user to enter Mediatek developed CrossMount application to
+     * manually remove the device from the trust list.
+     * @return True if the device is successfully removed from the trust list
+     */
+    public boolean removeFromTrust() {
+
+        return mAdapter.removeFromTrust(mDeviceId);
+    }
+
+    /**
+     * Query the connection count for the device. Application could use the connect count to order
+     * the device list.
+     * @return The connection count for the device.
+     */
+    public int getConnectCount(){
+        return mAdapter.getConnectCount(mDeviceId);
+    }
+
+    /**
+     * Query the max length for the device name.
+     * @return The max length for the device name
+     */
+    public int getMaxNameLength(){
+
+        return 20;
+    }
+
+    /**
+     * Query the invalid element for the device name.
+     * @return The invalid string elements
+     */
+    public String[] getInvalidNameElement() {
+
+        String[] invalid = {"@", "#", ",", "="};
+
+        return invalid;
+    }
+
+
+
+}

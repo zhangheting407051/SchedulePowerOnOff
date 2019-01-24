@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by fankaijian@wind-mobi.com 2016-12-21 begin-->
+    <string name="month_day_year">%B %-e, %Y</string>
+    <string name="time_of_day">%-l:%M:%S %p</string>
+    <string name="date_and_time">%b %-e, %Y, %-l:%M:%S %p</string>
+    <string name="date_time">%1$s, %2$s</string>
+    <!--add by fankaijian@wind-mobi.com 2016-12-21 end-->
+</resources>

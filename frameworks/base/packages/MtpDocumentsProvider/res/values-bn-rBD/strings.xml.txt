@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">MTP হোস্ট</string>
+    <string name="downloads_app_label">ডাউনলোডগুলি</string>
+    <string name="root_name"><xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g> <xliff:g example="Internal Storage" id="storage_name">%2$s</xliff:g></string>
+    <string name="accessing_notification_title"><xliff:g example="Nexus 9" id="device_model">%1$s</xliff:g> থেকে ফাইলগুলো অ্যাক্সেস করা</string>
+    <string name="error_busy_device">অন্য ডিভাইসটি ব্যস্ত। আপনি এটি উপলব্ধ না হওয়া অবধি ফাইলগুলো স্থানান্তর করতে পারবেন না।</string>
+    <string name="error_locked_device">কোনো ফাইল খুঁজে পাওয়া যায়নি। অন্য ডিভাইস লক হয়ে থাকতে পারে। যদি তাই হয় তবে এটি আনলক করুন এবং আবার চেষ্টা করুন।</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

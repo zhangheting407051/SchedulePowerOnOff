@@ -1,0 +1,11 @@
+package com.mediatek.op.ctm;
+
+import com.mediatek.common.ctm.ICtmExt;
+
+// Default implementation
+public class CtmExt implements ICtmExt {
+    @Override
+    public String getName() {
+        return "Invalid";
+    }
+}

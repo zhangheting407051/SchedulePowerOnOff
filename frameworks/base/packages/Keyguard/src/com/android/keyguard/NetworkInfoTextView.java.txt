@@ -1,0 +1,407 @@
+package com.android.keyguard;
+//yexumin@wind-mobi.com add 20170101 start
+//fix feature 146909, Network Info and Geographical area information
+
+import android.content.Context;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.content.Intent;
+import android.os.Bundle;
+import android.os.ServiceManager;
+import android.os.RemoteException;
+import android.telephony.ServiceState;
+import android.view.View;
+import android.widget.TextView;
+import android.util.Log;
+import android.util.AttributeSet;
+
+import com.android.internal.telephony.IccCardConstants.State;
+import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.TelephonyIntents;
+import com.mediatek.internal.telephony.ITelephonyEx;
+//huangfei@wind-mobi.com 2017.04.17 add start
+import android.telephony.TelephonyManager;
+import android.options.wind.CountryCodeUtils;
+import android.options.wind.WindFeatureOptions;
+//huangfei@wind-mobi.com 2017.04.17 add end
+//yexumin@wind-mobi.com 20170511 start
+//fix bug, panell-2792 panell-2707
+import android.os.SystemProperties;
+import com.android.internal.telephony.TelephonyProperties;
+//yexumin@wind-mobi.com 20170511 end
+
+public class NetworkInfoTextView extends TextView {
+
+    private static final String TAG = "EmergencyTextView";
+
+    private boolean mAttached;
+    private String mPLMN0;
+    private String mPLMN1;
+    private int mAreaCode0;
+    private int mAreaCode1;
+    //huangfei@wind-mobi.com 2017.04.17 add strat
+    private int mSubId[] = {-1,-1};
+    private String Cb0;
+    private String Cb1;
+    //huangfei@wind-mobi.com 2017.04.21 modify for PANELL 2707
+    private String mccList = "72406,72410,72411,72423";
+    private boolean needToShow = true;
+    private static final String ACTION_CB_RECIVE = "action.cb.receive";
+    private final String ACTION_CB_CLOSED = "com.android.setting.action.CBCLOSED";
+    private final String ACTION_CB_OPEN = "com.android.setting.action.OPEN";
+    //huangfei@wind-mobi.com 2017.04.17 add strat
+    //yexumin@wind-mobi.com 20170511 start
+    //fix bug, panell-2792 panell-2707
+    private final String[] VIVO_SIM = {"72406", "72410", "72411", "72423"};
+    //yexumin@wind-mobi.com 20170511 end
+
+    KeyguardUpdateMonitorCallback mInfoCallback = new KeyguardUpdateMonitorCallback() {
+
+        @Override
+        public void onSimStateChanged(int subId, int slotId, State simState) {
+            updateEmergencyTextView();
+        }
+
+        @Override
+        public void onSimStateChangedUsingPhoneId(int phoneId, State simState) {
+            updateEmergencyTextView();
+        }
+
+        @Override
+        public void onPhoneStateChanged(int phoneState) {
+            updateEmergencyTextView();
+        }
+
+        /// M: CTA new feature
+        @Override
+        public void onRefreshCarrierInfo() {
+            updateEmergencyTextView();
+        }
+    };
+
+    public NetworkInfoTextView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        this.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+            KeyguardUpdateMonitor.getInstance(mContext).registerCallback(mInfoCallback);
+        if (!mAttached) {
+            mAttached = true;
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(TelephonyIntents.SPN_STRINGS_UPDATED_ACTION);
+            //huangfei@wind-mobi.com 2017.04.17 add start
+            filter.addAction(ACTION_CB_RECIVE);
+            filter.addAction(ACTION_CB_CLOSED);
+            filter.addAction(ACTION_CB_OPEN);
+            //huangfei@wind-mobi.com 2017.04.17 add end
+            getContext().registerReceiver(mIntentReceiver, filter, null, getHandler());
+        }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        KeyguardUpdateMonitor.getInstance(mContext).removeCallback(mInfoCallback);
+        if (mAttached) {
+            getContext().unregisterReceiver(mIntentReceiver);
+            mAttached = false;
+        }
+    }
+
+    private void updateEmergencyTextView() {
+        this.setText("");
+        if (KeyguardUtils.isAirplaneModeOn(mContext)) {
+            return;
+        }
+        //huangfei@wind-mobi.com 2017.04.17 add start
+        if(!needToShow){
+            return;
+        }
+        //huangfei@wind-mobi.com 2017.04.17 add end
+        Bundle bd = null;
+        int phoneCount = KeyguardUtils.getNumOfPhone();
+        boolean isInService = false;
+        boolean isOutOfService = true;
+        boolean isEmergencyOnly = false;
+
+        try {
+            String localNetwork = "";
+            ITelephonyEx phoneEx = ITelephonyEx.Stub.asInterface(
+                    ServiceManager.checkService("phoneEx"));
+
+            if (phoneEx != null) {
+                //yexumin@wind-mobi.com 20170511 start
+                //fix bug, panell-2792 panell-2707
+                for (int i = 0; i < phoneCount; i++) {
+                    int subId = KeyguardUtils.getSubIdUsingPhoneId(i);
+                    //huangfei@wind-mobi.com 2017.04.17 add start
+                    mSubId[i] = subId;
+                    //huangfei@wind-mobi.com 2017.04.17 add start
+                    Log.i(TAG, "subId = " + subId + " , subIndex = " + i);
+                    bd = phoneEx.getServiceState(subId);
+                    if (bd != null) {
+                        ServiceState ss = ServiceState.newFromBundle(bd);
+                        Log.i(TAG, "ss.getState() = " + ss.getState() + " ss.isEmergencyOnly()="
+                                + ss.isEmergencyOnly() + " for simId=" + i + " mccmnc=" + ss.getOperatorNumeric());
+                        if (ServiceState.STATE_IN_SERVICE == ss.getState()) {
+                            isInService = true;
+//                            String mccmnc = ss.getOperatorNumeric();
+                            String mccmnc = getTelephonyProperty(i,TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+                            //huangfei@wind-mobi.com 2017.04.17 modify start
+//                            int type =TelephonyManager.getNetworkClass(ss.getRilVoiceRadioTechnology());
+                            int type =TelephonyManager.getNetworkClass(ss.getNetworkType());
+                            Log.d(TAG,"type = "+type);
+//                            if(WindFeatureOptions.WIND_COUNTRY_CODE_SUPPORT && CountryCodeUtils.getBooleanValue(CountryCodeUtils.COUNTRYCODE_ITEM_UMTSCB_OFF) && type== TelephonyManager.NETWORK_CLASS_3_G)
+//                                continue;
+                            //huangfei@wind-mobi.com 2017.04.21 modify for PANELL 2707
+                            boolean isVivoSIM = false;
+                            for (String mccmncVIVO : VIVO_SIM) {
+                                if (mccmncVIVO.equals(mccmnc)) {
+                                    Log.d(TAG,"mccmncVIVO = " + mccmnc);
+                                    isVivoSIM = true;
+                                }
+                            }
+                            if (WindFeatureOptions.WIND_COUNTRY_CODE_SUPPORT) {
+                                if (CountryCodeUtils.getBooleanValue(CountryCodeUtils.COUNTRYCODE_ITEM_NETWORKINFOLINE2) && isVivoSIM
+                                        && (type == TelephonyManager.NETWORK_CLASS_3_G || type == TelephonyManager.NETWORK_CLASS_4_G)) {
+                                    localNetwork = getLocalNetwork(i, localNetwork);
+                                    Log.d(TAG,"getLocalNetwork i = "+i+"localNetwork = "+localNetwork);
+                                //yexumin@wind-mobi.com modify 20170711 start
+                                //fix bug, panell-3109
+                                }else if(type == TelephonyManager.NETWORK_CLASS_2_G) {
+                                //yexumin@wind-mobi.com modify 20170711 end
+                                    localNetwork = getLocalNetworkFromCb(i, localNetwork);
+                                    Log.d(TAG,"getLocalNetworkFromCb i = "+i+"localNetwork = "+localNetwork);
+                                }else {
+                                    Log.d(TAG,"type = "+type);
+                                    Log.d(TAG,"i = "+i);
+                                    Log.d(TAG,"localNetwork = "+localNetwork);
+                                }
+                            }
+                            //huangfei@wind-mobi.com 2017.04.17 modify end
+                        } else {
+                            if (i == 0) {
+                                mPLMN0 = null;
+                                mAreaCode0 = -1;
+                                Cb0 = null;
+                                Log.d(TAG,"Clear info of SIM0");
+                            } else if (i == 1) {
+                                mPLMN1 = null;
+                                mAreaCode1 = -1;
+                                Cb1 = null;
+                                Log.d(TAG,"Clear info of SIM1");
+                            }
+                        }
+
+                        if (ServiceState.STATE_OUT_OF_SERVICE != ss.getState()) {
+                            isOutOfService = false;
+                        }
+
+                        if (ss.isEmergencyOnly()) {
+                            isEmergencyOnly = true;
+                        }
+                    }
+                }
+                //yexumin@wind-mobi.com 20170511 end
+            }
+
+            if (isInService) {
+                Log.d(TAG,"isInService  localNetwork = "+localNetwork);
+                this.setText(localNetwork);
+            } else {
+                if (isEmergencyOnly) {
+                    Log.d(TAG,"isEmergencyOnly");
+                    this.setText("");
+                } else if (isOutOfService) {
+                    Log.d(TAG,"isOutOfService");
+                    this.setText("");
+                }
+            }
+        } catch (RemoteException e) {
+            Log.i(TAG, "getServiceState error e:" + e.getMessage());
+        }
+    }
+
+    private String getLocalNetwork(int i, String info) {
+        String networkInfo = "";
+        if (i == 0 && mPLMN0 != null && !getAreaString(mAreaCode0).equals("")) {
+            networkInfo = mPLMN0 + " " + getAreaString(mAreaCode0) + " " + mAreaCode0;
+        } else if (i == 1 &&  mPLMN1 != null && !getAreaString(mAreaCode1).equals("")) {
+            if (info != "") {
+                networkInfo = info + " — ";
+            }
+            networkInfo = networkInfo + mPLMN1 + " " + getAreaString(mAreaCode1) + " " + mAreaCode1;
+        }
+        return networkInfo;
+    }
+
+    //huangfei@wind-mobi.com 2017.04.17 add start
+    private String getLocalNetworkFromCb(int i, String info) {
+        String networkInfo = "";
+        if (i == 0 && Cb0 != null) {
+            networkInfo = Cb0;
+        } else if (i == 1 &&  Cb1 != null) {
+            if (info != "") {
+//                zhengzhe@wind-mobi.com 20170426 start
+//                fix PANELL-2801  don't show hyphen when only one cell broadcast into
+                if (Cb1.equals("")) {
+                    networkInfo = info;
+                } else {
+                    networkInfo = info + " — ";
+                }
+//                zhengzhe@wind-mobi.com 20170426 end
+            }
+            networkInfo = networkInfo + Cb1;
+        }
+        return networkInfo;
+    }
+    //huangfei@wind-mobi.com 2017.04.17 add end
+
+    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Log.d(TAG,"action = "+action);
+            if (TelephonyIntents.SPN_STRINGS_UPDATED_ACTION.equals(action)) {
+                int phoneId = intent.getIntExtra(PhoneConstants.PHONE_KEY, 0);
+                if (phoneId == 0) {
+                    mPLMN0 = intent.getStringExtra(TelephonyIntents.EXTRA_PLMN);
+                    mAreaCode0 = getAreaCode(intent.getIntExtra("lac", -1));
+                } else if (phoneId == 1) {
+                    mPLMN1 = intent.getStringExtra(TelephonyIntents.EXTRA_PLMN);
+                    mAreaCode1 = getAreaCode(intent.getIntExtra("lac", -1));
+                }
+                Log.d(TAG,"phoneId = "+phoneId);
+                Log.d(TAG,"mPLMN0 = "+mPLMN0 + "mAreaCode0 = "+mAreaCode0);
+                Log.d(TAG,"mPLMN1 = "+mPLMN1 + "mAreaCode1 = "+mAreaCode1);
+                updateEmergencyTextView();
+            }
+            //huangfei@wind-mobi.com 2017.04.17 add start
+            else if(ACTION_CB_RECIVE.equals(action)){
+                int subId = intent.getIntExtra("subId",-2);
+                String body = intent.getStringExtra("body");
+                //yexumin@wind-mobi.com 20170511 start
+                //fix bug, panell-3018
+                if(subId == mSubId[0]){
+                    Cb0 = body.trim();
+                }else if (subId == mSubId[1]) {
+                    Cb1 = body.trim();
+                //yexumin@wind-mobi.com 20170511 end
+                }else {
+                    Log.d(TAG,"ACTION_CB_RECIVE  body = "+ body +" subId = "+subId + "  mSubId[0] = "+mSubId[0]+" mSubId[1] = "+mSubId[1]);
+                }
+                Log.d(TAG,"Cb0 = "+Cb0 + "Cb1 = "+Cb1);
+                updateEmergencyTextView();
+            }else if(ACTION_CB_CLOSED.equals(action)){
+                setText("");
+                Cb0 = "";
+                Cb1 = "";
+                needToShow = false;
+                Log.d(TAG,"ACTION_CB_CLOSED");
+            }else if(ACTION_CB_OPEN.equals(action)){
+                Log.d(TAG,"ACTION_CB_OPEN");
+                needToShow = true;
+                updateEmergencyTextView();
+            }
+            //huangfei@wind-mobi.com 2017.04.17 add end
+    }};
+
+    private int getAreaCode(int lac) {
+        if (lac == -1 || lac <= 10) {
+            return -1;
+        } else {
+            String lacString = String.valueOf(lac);
+            return Integer.parseInt(String.valueOf(lacString).substring(lacString.length() - 2));
+        }
+    }
+
+    private String getAreaString(int areaCode) {
+        String areaString = "";
+        if (areaCode >= 11 && areaCode <= 19) {
+            areaString = "SP"; 
+        } else if (areaCode >= 21 && areaCode <= 24) {
+            areaString = "RJ"; 
+        } else if (areaCode >= 27 && areaCode <= 28) {
+            areaString = "ES"; 
+        } else if (areaCode >= 31 && areaCode <= 38) {
+            areaString = "MG"; 
+        } else if (areaCode >= 41 && areaCode <= 46) {
+            areaString = "PR"; 
+        } else if (areaCode >= 47 && areaCode <= 49) {
+            areaString = "SC"; 
+        } else if (areaCode >= 51 && areaCode <= 55) {
+            areaString = "RS"; 
+        } else if (areaCode == 61) {
+            areaString = "DF"; 
+        } else if (areaCode == 62 || areaCode == 64) {
+            areaString = "GO"; 
+        } else if (areaCode == 63) {
+            areaString = "TO"; 
+        } else if (areaCode == 65 || areaCode == 66) {
+            areaString = "MT"; 
+        } else if (areaCode == 67) {
+            areaString = "MS"; 
+        } else if (areaCode == 68) {
+            areaString = "AC"; 
+        } else if (areaCode == 69) {
+            areaString = "RO"; 
+        } else if (areaCode >= 71 && areaCode <= 77) {
+            areaString = "BA"; 
+        } else if (areaCode == 79) {
+            areaString = "SE"; 
+        } else if (areaCode == 81 || areaCode == 87) {
+            areaString = "PE"; 
+        } else if (areaCode == 82) {
+            areaString = "AL"; 
+        } else if (areaCode == 83) {
+            areaString = "PB"; 
+        } else if (areaCode == 84) {
+            areaString = "RN"; 
+        } else if (areaCode == 85) {
+            areaString = "CE"; 
+        } else if (areaCode == 86) {
+            areaString = "PI"; 
+        } else if (areaCode == 88) {
+            areaString = "CE"; 
+        } else if (areaCode == 89) {
+            areaString = "PI"; 
+        } else if (areaCode == 91 || areaCode == 93 || areaCode == 94) {
+            areaString = "PA"; 
+        } else if (areaCode == 92 || areaCode == 97) {
+            areaString = "AM"; 
+        } else if (areaCode == 95) {
+            areaString = "RR"; 
+        } else if (areaCode == 96) {
+            areaString = "AP"; 
+        } else if (areaCode == 98 || areaCode == 99) {
+            areaString = "MA"; 
+        }
+        return areaString;
+    }
+
+    //huangfei@wind-mobi.com 2017.04.17 add start
+    @Override
+    public boolean isFocused(){
+        return true;
+    }
+    //huangfei@wind-mobi.com 2017.04.17 add end
+    //yexumin@wind-mobi.com 20170511 start
+    //fix bug, panell-2792 panell-2707
+    private static String getTelephonyProperty(int phoneId, String property, String defaultVal) {
+        String propVal = null;
+        String prop = SystemProperties.get(property);
+        Log.d(TAG, "getTelephonyProperty prop value= " + prop);
+        if ((prop != null) && (prop.length() > 0)) {
+            String values[] = prop.split(",");
+            if ((phoneId >= 0) && (phoneId < values.length) && (values[phoneId] != null)) {
+                propVal = values[phoneId];
+            }
+        }
+        return propVal == null ? defaultVal : propVal;
+    }
+    //yexumin@wind-mobi.com 20170511 end
+}
+//yexumin@wind-mobi.com add 20170101 end

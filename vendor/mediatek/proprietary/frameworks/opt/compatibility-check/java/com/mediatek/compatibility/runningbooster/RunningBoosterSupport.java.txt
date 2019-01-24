@@ -1,0 +1,29 @@
+package com.mediatek.compatibility.runningbooster;
+
+import android.content.Context;
+import android.os.ServiceManager;
+import android.os.SystemProperties;
+import android.util.Slog;
+import com.mediatek.runningbooster.IRunningBoosterManager;
+import com.mediatek.runningbooster.RunningBoosterManager;
+
+public class RunningBoosterSupport {
+    private static final String TAG = "RunningBoosterSupport";
+
+    public static boolean isRunningBoosterFeatureAvailable(Context context) {
+        boolean featureEnable = 1 == SystemProperties.getInt("persist.runningbooster.support", 0);
+        boolean isFeatureSupport = false;
+        try {
+            RunningBoosterManager manager = new RunningBoosterManager(context);
+            if (null != manager && null != IRunningBoosterManager.Stub.asInterface
+                    (ServiceManager.getService("running_booster"))) {
+                isFeatureSupport = true;
+            }
+        } catch (NoClassDefFoundError e) {
+            Slog.e(TAG, "NoClassDefFoundError RunningBoosterManager");
+        }
+        Slog.d(TAG, "[RunningBoosterSupport] featureEnable is " + featureEnable +
+                " isFeatureSupport = " + isFeatureSupport);
+        return featureEnable & isFeatureSupport;
+    }
+}

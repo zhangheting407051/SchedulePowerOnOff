@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_label">Host MTP</string>
+    <string name="downloads_app_label">Unduhan</string>
+    <string name="root_name">&lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt; &lt;xliff:g example="Internal Storage" id="storage_name"&gt;%2$s&lt;/xliff:g&gt;</string>
+    <string name="accessing_notification_title">Mengakses file dari &lt;xliff:g example="Nexus 9" id="device_model"&gt;%1$s&lt;/xliff:g&gt;</string>
+    <string name="error_busy_device">Perangkat lain sibuk. Anda tidak dapat mentransfer file hingga perangkat tersedia.</string>
+    <string name="error_locked_device">Tidak ditemukan file. Perangkat lain mungkin dikunci. Jika demikian, buka kunci perangkat dan coba lagi.</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

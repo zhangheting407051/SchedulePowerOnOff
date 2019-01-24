@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="app_name">Android 服務媒體庫</string>
+    <string name="notification_ranker">Android 通知排名服務</string>
+    <string name="notification_ranker_autobundle_explanation">排名服務更新的自動群組</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

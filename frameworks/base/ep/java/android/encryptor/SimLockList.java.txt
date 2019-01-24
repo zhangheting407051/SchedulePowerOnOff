@@ -1,0 +1,225 @@
+/*
+********************************************************
+******chusuxia@wind-mobi.com add for SIM LOCK start*****
+********************************************************
+*/
+
+package android.encryptor;
+
+import com.mediatek.internal.telephony.ITelephonyEx;
+import android.media.MediaCodec;
+import android.util.Log;
+import android.os.ServiceManager;
+import android.util.StringBuilderPrinter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+
+/**
+ * @author chusuxia
+ *
+ * simlockList for SIM-ME lock use
+ * 
+ */
+
+
+public class SimLockList {
+    private static final String TAG = "SimLockList";
+    private static final int SML_CAT = 2;
+    private static String mSimLockState = "UNKNOW";
+    private static String mSimLockCode = "";
+    private static int mAutoCount=0;
+    private static int  mRetryCount=5;
+    private static boolean isGetSiminfo=false;
+    public static String SML_UNLOCK_STATE="UNLOCK";
+    public static String SML_AUTOLOCK_STATE="AUTOLOCK";
+    public static String SML_UNLOCKED_STATE="UNLOCKED";
+    public static String SML_LOCKED_STATE="LOCKED";
+
+
+    private static void judegGetSiminfo(){
+        Log.v(TAG,"isGetSiminfo is" + isGetSiminfo);
+        if(!isGetSiminfo) {
+            getSimLockInfo();
+        }
+
+    }
+    private static void getSimLockInfo(){
+        String codes = "";
+        try {
+            codes = ITelephonyEx.Stub.asInterface(ServiceManager.checkService("phoneEx")).windQuerySmlCode(SML_CAT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isGetSiminfo=false;
+            return;
+        }
+        if(codes == null){
+            Log.v(TAG,"Code is null");
+            isGetSiminfo=false;
+            return;
+        }
+        String[] nets = codes.split("\"");
+
+
+        if(nets ==null || nets.length< 2 ) {
+            isGetSiminfo=false;
+            return;
+        }
+        Log.v(TAG, "Code is:" + nets[1]);
+        String [] infoData = nets[1].split(",");
+        if(infoData == null || infoData.length==0 ) {
+            isGetSiminfo=false;
+            return;
+        }
+        isGetSiminfo=true;
+        if(("UNLOCK").equals(infoData[0])){
+            Log.v(TAG, "State is UNLOCK");
+            mSimLockState=SML_UNLOCK_STATE;
+        } else if(("AUTOLOCK").equals(infoData[0])) {
+            Log.v(TAG, "State is AUTOLOCK");
+            mSimLockState=SML_AUTOLOCK_STATE;
+            if(infoData.length>=2){
+                mAutoCount=coverStringtoInt(infoData[1]);
+                mRetryCount=coverStringtoInt(infoData[2]);
+            }
+        } else {
+            String smlcode=infoData[0];
+            int length=smlcode.length();
+            if((2==SML_CAT && 0==length%8) || ( 0==SML_CAT && 0==length%6)){
+                Log.v(TAG, "State is LOCK");
+                mSimLockState=SML_LOCKED_STATE;
+                mSimLockCode=dealMccMncStr(smlcode);
+                if(infoData.length>=1){
+                    mRetryCount=coverStringtoInt(infoData[1]);
+                    if(mRetryCount > 0 && mRetryCount < 256) {
+                        dealRetryCount(mRetryCount);
+                    }
+                }
+            }
+        }
+        Log.v(TAG, "mSimLockState is:"+ mSimLockState + "mSimLockCode=" + mSimLockCode);
+
+    }
+
+
+    private static void dealRetryCount(int mRetryCount){
+        int defaultCount = SimLockHelp.getDefaultCount();
+        int retryCount = SimLockHelp.getRetryCount();
+        if(!SimLockHelp.isRetryCoutFileExists() || (mRetryCount!=defaultCount && defaultCount==retryCount)){
+            SimLockHelp.setDefaultCount(mRetryCount);
+            SimLockHelp.setRetryCount(mRetryCount);
+        }
+    }
+
+    private static int coverStringtoInt (String str) {
+        String tStr=str.trim();
+        Pattern  pattern = Pattern.compile("[0-9]*");
+        if(tStr!=null&&!("").equals(tStr)){
+            Matcher matcher = pattern.matcher(tStr);
+            if (matcher.matches()) {
+                return Integer.parseInt(tStr);
+            }
+        }
+
+        return -1;
+
+    }
+
+    public static boolean isSMLUnloked(){
+        String tState = getSMLState();
+        if(SML_UNLOCKED_STATE.equals(tState)){
+            return true;
+        }
+        return false;
+    }
+
+    public static String getSMLState(){
+        Log.v(TAG,"getSMLState");
+        String tState = SimLockHelp.getSimLockState();
+        if("unlock".equals(tState)){
+            return SML_UNLOCKED_STATE;
+        }
+        judegGetSiminfo();
+        return mSimLockState;
+    }
+
+    public static void setSMLUnlocked(){
+        Log.v(TAG,"setSMLUnlocked");
+        SimLockHelp.setSimLockState("unlock");
+    }
+
+    public static void ResetSMLState(){
+        Log.v(TAG,"ResetSMLState");
+        SimLockHelp.setSimLockState("0");
+    }
+
+    public static void ResetSMLRetryCount(){
+        Log.v(TAG,"ResetSMLState");
+        int tRetryCount = -1;
+        tRetryCount = SimLockHelp.getDefaultCount();
+        if( tRetryCount != -1) {
+            setRetryCount(tRetryCount);
+        }
+    }
+
+    public static void setRetryCount(int count){
+        Log.v(TAG,"setmRetryCount : count" +count);
+        SimLockHelp.setRetryCount(count);
+    }
+
+    public static int getSMLAutoCount(){
+        Log.v(TAG,"getSMLAutoCount");
+        judegGetSiminfo();
+        return mAutoCount;
+    }
+
+    public static String getSMLCode(){
+        Log.v(TAG,"getSMLCode");
+        judegGetSiminfo();
+        return mSimLockCode;
+    }
+
+    public static int getSMLRetryCount(){
+        Log.v(TAG,"getSMLRetryCount");
+        judegGetSiminfo();
+        int retryCount = SimLockHelp.getRetryCount();
+        if(retryCount >= 0 && retryCount < 256){
+            return retryCount;
+        }
+        return mRetryCount;
+    }
+
+    
+    
+     private  static String  dealMccMncStr(String smlCode){
+      StringBuffer listStr = new StringBuffer();
+      int length = smlCode.length();
+      int mode=0;
+      if(SML_CAT==2){
+          mode = 8;
+      } else {
+          mode = 6;
+      }
+  
+      Log.v(TAG, "Code is:" +smlCode + " length is" + length );
+      if (length % mode == 0) {
+        for (int i = 0; i < length /mode; i++) {
+            String c = smlCode.substring(i * mode, i * mode + mode).toUpperCase();
+             Log.v("sakura", "c is:" + c);
+            if (c.equals("FFFFFF")) {
+              return "";
+            } else {
+                listStr.append(c);
+                listStr.append(",");                               
+            }
+          }
+        }
+        return listStr.toString();
+      }
+}
+
+/*
+********************************************************
+*******chusuxia@wind-mobi.com add for SIM LOCK end******
+********************************************************
+*/

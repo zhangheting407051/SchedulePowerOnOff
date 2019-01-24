@@ -1,0 +1,140 @@
+package com.android.server;
+import android.content.Context;
+import android.os.IFactoryAutoTest;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+public class FactoryAutoTestService extends IFactoryAutoTest.Stub {
+
+    long mLcdColorManagerNativeData = 0;
+    Context mContext = null;
+    boolean mKeyTesting = false;
+
+    FactoryAutoTestService(Context context) {
+        mContext = context;
+    }
+
+    @Override // Binder call
+    public void startLcdTest() {
+        //mLcdColorManagerNativeData =
+        new Thread(){
+            public void run(){
+                initLcdColorManager();
+            }
+        }.start();
+    }
+
+    private int[] getRemoteIntArray(String name){
+        int[] keys = null;
+        try {
+            Resources res = mContext.getPackageManager().getResourcesForApplication("com.wind.emode");
+            int resourceId = res.getIdentifier(name, "array", "com.wind.emode");
+            if(0 != resourceId) {
+                keys = res.getIntArray(resourceId);
+            }
+        } catch (NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return keys;
+    }
+
+    @Override // Binder call
+    public void startKeyTest() {
+        android.util.Log.i("yangjiajun", "startKeyTest() mKeyTesting: " + mKeyTesting);
+        if(!mKeyTesting){
+            mKeyTesting = true;
+            new Thread(){
+                public void run(){
+                    android.provider.Settings.System.putInt(mContext.getContentResolver(), "emode_pac_flag_key", 2);
+                    android.os.SystemProperties.set("sys.wind.keytestval", "0");
+                    int[] keys = getRemoteIntArray("config_test_keys");
+                    if(keys != null){
+                        try{
+                            testKeys(keys);
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                        if("1".equals(android.os.SystemProperties.get("sys.wind.keytestval", "0"))){
+                            android.provider.Settings.System.putInt(mContext.getContentResolver(), "emode_pac_flag_key", 1);
+                        }
+                    }
+                    mKeyTesting = false;
+                }
+            }.start();
+        }
+    }
+
+    @Override // Binder call
+    public String getFailKeyValues() {
+        return getFailKeys();
+    }
+
+    private void writeColor(String path, String brightness){
+        try {
+            OutputStream os = new FileOutputStream(path);
+            os.write(brightness.getBytes());
+            os.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeLedNote(String value){
+       FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream("/sys/devices/mx_leds/leds_factory");
+            fos.write(value.getBytes());
+            fos.flush();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override // Binder call
+    public void testLed(int ct, int status){
+        if(status == 1){
+            writeLedNote("2");
+        }
+        writeColor("/sys/class/leds/red/brightness", "0");
+        writeColor("/sys/class/leds/green/brightness", "0");
+        writeColor("/sys/class/leds/blue/brightness", "0");
+        String path = "/sys/class/leds/red/brightness";
+        if(ct == 2){
+            path = "/sys/class/leds/green/brightness";
+        }else if(ct == 3){
+            path = "/sys/class/leds/blue/brightness";
+        }
+        if(status == 1){
+            writeColor(path, "255");
+        }else{
+            writeLedNote("0");
+        }
+    }
+
+    @Override // Binder call
+    public boolean isSc(String code){
+        return getSc().equals(code);
+    }
+
+    private native String getSc();
+    private native long initLcdColorManager();
+    private native void testKeys(int[] keys);
+    private native String getFailKeys();
+}

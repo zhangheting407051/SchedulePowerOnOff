@@ -1,0 +1,207 @@
+/* Copyright Statement:
+ *
+ * This software/firmware and related documentation ("MediaTek Software") are
+ * protected under relevant copyright laws. The information contained herein is
+ * confidential and proprietary to MediaTek Inc. and/or its licensors. Without
+ * the prior written permission of MediaTek inc. and/or its licensors, any
+ * reproduction, modification, use or disclosure of MediaTek Software, and
+ * information contained herein, in whole or in part, shall be strictly
+ * prohibited.
+ *
+ * MediaTek Inc. (C) 2010. All rights reserved.
+ *
+ * BY OPENING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
+ * THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
+ * RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER
+ * ON AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
+ * NONINFRINGEMENT. NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH
+ * RESPECT TO THE SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY,
+ * INCORPORATED IN, OR SUPPLIED WITH THE MEDIATEK SOFTWARE, AND RECEIVER AGREES
+ * TO LOOK ONLY TO SUCH THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO.
+ * RECEIVER EXPRESSLY ACKNOWLEDGES THAT IT IS RECEIVER'S SOLE RESPONSIBILITY TO
+ * OBTAIN FROM ANY THIRD PARTY ALL PROPER LICENSES CONTAINED IN MEDIATEK
+ * SOFTWARE. MEDIATEK SHALL ALSO NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE
+ * RELEASES MADE TO RECEIVER'S SPECIFICATION OR TO CONFORM TO A PARTICULAR
+ * STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S
+ * ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE
+ * RELEASED HEREUNDER WILL BE, AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE
+ * MEDIATEK SOFTWARE AT ISSUE, OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE
+ * CHARGE PAID BY RECEIVER TO MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
+ *
+ * The following software/firmware and/or related documentation ("MediaTek
+ * Software") have been modified by MediaTek Inc. All revisions are subject to
+ * any receiver's applicable license agreements with MediaTek Inc.
+ */
+
+#include "IProgramBinaryService.h"
+#include "ProgramBinaryData.h"
+
+#include <binder/Parcel.h>
+#include <utils/Log.h>
+#include <fcntl.h>
+#include <cutils/properties.h>
+
+
+using namespace android;
+
+IMPLEMENT_META_INTERFACE(ProgramBinaryService, PROGRAM_BINARY_NAME);
+
+BpProgramBinaryService::BpProgramBinaryService(const sp<IBinder>& impl)
+        : BpInterface<IProgramBinaryService>(impl) {
+    // Set debug property
+    char property[PROPERTY_VALUE_MAX];
+    if (property_get(PROPERTY_DEBUG_PROGRAM_BINARY, property, "0") > 0) {
+        if (atoi(property) == 1) {
+            g_debug_program_binary = 1;
+            ALOGI("ProgramBinaryService client side enable debugging.");
+        } else {
+            g_debug_program_binary = 0;
+            ALOGI("ProgramBinaryService client side disable debugging.");
+        }
+    }
+    if (property_get(PROPERTY_DEBUG_PROGRAM_BINARY_CONTENT, property, "0") > 0) {
+        if (atoi(property) == 1) {
+            g_debug_program_binary_content = 1;
+            ALOGI("ProgramBinaryService client side enable binary content debugging.");
+        } else {
+            g_debug_program_binary_content = 0;
+            ALOGI("ProgramBinaryService client side disable binary content debugging.");
+        }
+    }
+}
+
+bool BpProgramBinaryService::getReady() {
+    ALOGD("BpProgramBinaryService.getReady");
+    Parcel data;
+    Parcel reply;
+    data.writeInterfaceToken(IProgramBinaryService::getInterfaceDescriptor());
+    remote()->transact(GET_READY, data, &reply);
+    int32_t err = reply.readExceptionCode();
+    if (err < 0) {
+        ALOGE("BpProgramBuilderService.getReady: Caught exception %d.", err);
+        return 0;
+    }
+    int readyInt = reply.readInt32();
+    DEBUG_LOGD("[Bp.GetReady] Ready = %d", readyInt);
+    return readyInt;
+}
+
+void BpProgramBinaryService::setReady(bool ready) {
+    ALOGD("BpProgramBuilderService.setReady");
+    Parcel data;
+    Parcel reply;
+    data.writeInterfaceToken(IProgramBinaryService::getInterfaceDescriptor());
+    data.writeInt32(ready? 1: 0);
+    remote()->transact(SET_READY, data, &reply);
+    int32_t err = reply.readExceptionCode();
+    if (err < 0) {
+        ALOGE("BpProgramBuilderService.setReady: Caught exception %d.", err);
+    }
+    DEBUG_LOGD("[Bp.SetReady] Ready = %d", ready);
+}
+
+ProgramBinaryData* BpProgramBinaryService::getProgramBinaryData() {
+    ALOGD("BpProgramBinaryService.getProgramBinaryData");
+    Parcel data;
+    Parcel reply;
+    data.writeInterfaceToken(IProgramBinaryService::getInterfaceDescriptor());
+    remote()->transact(GET_PROGRAM_BINARY_DATA, data, &reply);
+    int32_t err = reply.readExceptionCode();
+    if (err < 0) {
+        ALOGE("BpProgramBuilderService.getProgramBinaryData: Caught exception %d.", err);
+        return NULL;
+    }
+
+    // Read data from parcel
+    int fd = (int)reply.readFileDescriptor();
+    int dupFd = -1;
+    if (fd >= 0) {
+        dupFd = dup(fd);
+        char s[256] = {0};
+        char name[256] = {0};
+        snprintf(s, 255, "/proc/%d/fd/%d", getpid(), dupFd);
+        int len = readlink(s, name, sizeof(name) - 1);
+        if (len < 0) {
+            ALOGE("[Bp.getProgramBinaryData] Failed to readlink.");
+            return NULL;
+        }
+
+        DEBUG_LOGD("[Bp.getProgramBinaryData] Fd = %d, originalFd = %d, valid = %d, path = %s",
+                dupFd, fd, fcntl(dupFd, F_GETFL) != -1,  name);
+    } else {
+        DEBUG_LOGD("[Bp.getProgramBinaryData] Failed to read fd(%d).", fd);
+        return NULL;
+    }
+
+    int programBinLen = reply.readInt32();
+    int programMapLen = reply.readInt32();
+    if (programBinLen <= 0 || programMapLen <= 0) {
+        DEBUG_LOGD("[Bp.getProgramBinaryData] Program binary length or map length is zero");
+        return NULL;
+    }
+
+    int64_t* arr = new int64_t[programMapLen];
+    for (int i = 0; i < programMapLen; i++) {
+        arr[i] = (int64_t)reply.readInt64();
+    }
+
+    // Log for displaying binary content
+    DEBUG_LOGD("[Bp.getProgramBinaryData] ProgramBinaryLength = %d, ProgramMapLength = %d",
+            programBinLen, programMapLen);
+    for (int i = 0; i < programMapLen; i += 4) {
+        CONTENT_LOGD("[Bp.getProgramBinaryData] ProgramEntry #%2d: "
+                "key 0x%.8x%.8x, offset %d, binaryLength %d, format %d",
+                i/4, uint32_t(arr[i] >> 32), uint32_t(arr[i] & 0xffffffff),
+                (int)((long)arr[i+1]), static_cast<int>(arr[i+2]),
+                static_cast<int>(arr[i+3]));
+    }
+
+    // Create ProgramBinaryData to maintain data
+    ProgramBinaryData* pbData = new ProgramBinaryData();
+    pbData->init(dupFd, programBinLen, programMapLen, arr);
+    delete[] arr;
+    return pbData;
+}
+
+void BpProgramBinaryService::setProgramBinaryData(ProgramBinaryData* pbData) {
+    ALOGD("BpProgramBinaryService.setProgramBinaryData");
+    Parcel data;
+    Parcel reply;
+    data.writeInterfaceToken(IProgramBinaryService::getInterfaceDescriptor());
+
+    // Read data from ProgramBinaryData
+    int fd = pbData->getFileDescriptor();
+    int programBinLen = pbData->getProgramBinaryLen();
+    int programMapLen = pbData->getProgramMapLen();
+    int64_t* programMapArray = NULL;
+    pbData->getProgramMapArray(&programMapArray);
+    delete pbData;
+
+    // Wrete data into parcel
+    data.writeFileDescriptor(fd);
+    data.writeInt32(programBinLen);
+    data.writeInt32(programMapLen);
+    for (int i = 0; i < programMapLen; i++) {
+        data.writeInt64(programMapArray[i]);
+    }
+    remote()->transact(SET_PROGRAM_BINARY_DATA, data, &reply);
+    int32_t err = reply.readExceptionCode();
+    if (err < 0) {
+        ALOGE("BpProgramBuilderService.setProgramBinaryData: Caught exception %d.", err);
+    }
+
+    // Log for displaying binary content
+    DEBUG_LOGD("[Bp.setProgramBinaryData] Fd = %d, ProgramBinaryLength = %d, ProgramMapLength = %d",
+            fd, programBinLen, programMapLen);
+    for (int i = 0; i < programMapLen; i += 4) {
+        CONTENT_LOGD("[Bp.setProgramBinaryData] ProgramEntry #%2d: "
+                "key 0x%.8x%.8x, offset %d, binaryLength %d, format %d",
+                i/4, uint32_t(programMapArray[i] >> 32), uint32_t(programMapArray[i] & 0xffffffff),
+                (int)((long)programMapArray[i+1]), static_cast<int>(programMapArray[i+2]),
+                static_cast<int>(programMapArray[i+3]));
+    }
+    delete programMapArray;
+}
+

@@ -1,0 +1,26 @@
+ifeq ($(MTK_CROSSMOUNT_SUPPORT), yes)
+
+TOP_LOCAL_PATH:= $(call my-dir)
+include $(CLEAR_VARS)
+
+include $(TOP_LOCAL_PATH)/deps/openssl/Android.mk
+include $(TOP_LOCAL_PATH)/deps/http_parser/Android.mk
+include $(TOP_LOCAL_PATH)/deps/zlib/Android.mk
+include $(TOP_LOCAL_PATH)/deps/uv/Android.mk
+include $(TOP_LOCAL_PATH)/deps/cares/Android.mk
+include $(TOP_LOCAL_PATH)/deps/v8/Android.mk
+include $(TOP_LOCAL_PATH)/deps/debugger-agent/Android.mk
+include $(TOP_LOCAL_PATH)/src/Android.mk
+
+LOCAL_PATH := $(TOP_LOCAL_PATH)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := nodejs
+LOCAL_PROPRIETARY_MODULE := true
+LOCAL_MODULE_OWNER := mtk
+
+LOCAL_SRC_FILES:=
+
+include $(MTK_SHARED_LIBRARY)
+
+endif

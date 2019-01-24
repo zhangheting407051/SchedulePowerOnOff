@@ -1,0 +1,120 @@
+/*
+ * hanweiwei@wind-mobi.com create 2016.12.27 start
+ *This is to receive the broadcast "com.motorola.intent.action.WIPE_CACHE_ONLY",
+ * which is sent from the MOTO's OTA app.
+ * If received the broadcast, it will be cleaned the cache partitial.
+ */
+
+package com.android.server;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.options.wind.WindFeatureOptions;
+import android.provider.Settings;
+import android.util.Log;
+
+import java.io.File;
+
+public class WipeCacheReceiver extends BroadcastReceiver {
+    private static final String TAG = "WipeCacheReceiver";
+    private static final String WIPE_ACTION = "com.motorola.intent.action.WIPE_CACHE_ONLY";
+    private static final String BLUR_FILE = "Blur";
+    private static final String BLOCK_MAP_FILE = "block.map";
+    private static final String[] protectDirName = {"recovery", "backup", "backup_stage", "lost+found"};
+    private static final String[] protectFileName = {"last_install", "last_kmsg", "last_locale", "last_log", "last_upgrade"};
+
+    private Context mContext = null;
+
+    @Override
+    public void onReceive(final Context context, Intent intent) {
+        String action = intent.getAction();
+        Log.i(TAG, "action = " + action);
+        mContext = context;
+        if (action.equals(WIPE_ACTION)) {
+            Log.i(TAG, "action = " + action + "   start delete cache files, intent = " + intent.toString());
+            File file = new File("/cache");
+            File[] files = file.listFiles();
+            if (files != null && files.length != 0) {
+                Log.i(TAG, "cache partition is not empty");
+                for (File f : files) {
+                    deleteFiles(f);
+                }
+            }
+        } else if (action.equals(Intent.ACTION_SHUTDOWN)){
+            if (WindFeatureOptions.WIND_DEF_OPTR_A158_EMEAD_1RAM) {
+                Settings.System.putInt(mContext.getContentResolver(), Settings.System.WIND_MOUNT_COMPLETED, 0);
+                Settings.System.putInt(mContext.getContentResolver(), Settings.System.WIND_HAS_BOOT_COMPLETED, 0);
+                Log.i(TAG, "SystemServer  wind_mount_completed = " + Settings.System.getInt(mContext.getContentResolver(), "wind_mount_completed", 2));
+                Log.i(TAG, "SystemServer  wind_has_boot_completed = " + Settings.System.getInt(mContext.getContentResolver(), "wind_has_boot_completed", 2));
+            }
+        } else if (action.equals(Intent.ACTION_BOOT_COMPLETED)){
+            if (WindFeatureOptions.WIND_DEF_OPTR_A158_EMEAD_1RAM) {
+                Settings.System.putInt(mContext.getContentResolver(), "wind_has_boot_completed", 1);
+            }
+        }
+    }
+
+    private void deleteFiles(File file){
+        if (!file.exists()){
+            return;
+        }
+        String fileName = file.getName();
+        String fileAbsolutePath = file.getAbsolutePath();
+        boolean isProtected = false;
+        for (String dir: protectDirName){
+            if (fileName.equals(dir)){
+                Log.i(TAG, "this file /cache/ " + fileName + " is empty, it is be protected, can't be deleted!!!");
+                isProtected = true;
+                break;
+            }
+        }
+        if (fileName.startsWith(BLUR_FILE) || fileName.startsWith(BLOCK_MAP_FILE)){
+            Log.i(TAG, fileAbsolutePath + " is protected for MOTO, do not to delete ");
+            return;
+        }
+
+        for (String f: protectFileName){
+            if (fileName.equals(f)){
+                Log.i(TAG, fileAbsolutePath + " is protected, do not to delete ");
+                return;
+            }
+        }
+
+        if (file.isDirectory()){
+            File[] childFiles = file.listFiles();
+            if ( childFiles == null || childFiles.length == 0 ){
+                if (!isProtected) {
+                    boolean r1 = file.delete();
+                    if (!r1)
+                        Log.i(TAG, fileAbsolutePath + "  can not delete 1");
+                }else {
+                    Log.i(TAG, fileAbsolutePath + "  is empty and protected, can not be deleted!!!");
+                }
+                return;
+            }
+            for (File f : childFiles){
+                deleteFiles(f);
+            }
+
+            Log.i(TAG, fileAbsolutePath + " is to delete ");
+
+            if (!isProtected) {
+                boolean r2 = file.delete();
+                if (!r2)
+                    Log.i(TAG, fileAbsolutePath + "  can not delete 2");
+            }else {
+                Log.i(TAG, fileAbsolutePath + " has child files, have already deleted,  this file is protected, can not be deleted!!!");
+            }
+        } else if (file.isFile()){
+            boolean r3 = file.delete();
+            if (!r3)
+                Log.i(TAG, fileAbsolutePath + "  can not delete 3");
+        }
+
+    }
+}
+/*
+* hanweiwei@wind-mobi.com create 2016.12.27 end
+*/

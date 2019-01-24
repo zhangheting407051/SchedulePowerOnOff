@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 begin-->
+    <string name="crop_wallpaper">ওয়ালপেপার ছাঁটুন</string>
+    <string name="wallpaper_instructions">ওয়ালপেপার সেট করুন</string>
+    <string name="wallpaper_load_fail">চিত্রটি ওয়ালপেপার হিসাবে লোড করতে পারে না</string>
+    <!--add by liuyangyao@wind-mobi.com 2016-12-04 end-->
+</resources>

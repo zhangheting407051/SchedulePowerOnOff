@@ -1,0 +1,900 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.server.wifi;
+
+import static com.android.server.wifi.util.ApConfigUtil.ERROR_GENERIC;
+import static com.android.server.wifi.util.ApConfigUtil.ERROR_NO_CHANNEL;
+import static com.android.server.wifi.util.ApConfigUtil.SUCCESS;
+/// M: Hotspot manager implementation @{
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+/// @}
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+/// M: Hotspot manager implementation @{
+import android.database.ContentObserver;
+/// @}
+import android.net.ConnectivityManager;
+import android.net.InterfaceConfiguration;
+import android.net.LinkAddress;
+import android.net.NetworkUtils;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+/// M: Hotspot manager implementation @{
+import android.os.Handler;
+import android.os.HandlerThread;
+/// @}
+import android.os.INetworkManagementService;
+import android.os.Looper;
+import android.os.Message;
+/// M: Hotspot manager implementation @{
+import android.os.UserHandle;
+import android.net.wifi.HotspotClient;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.WpsResult;
+import android.net.wifi.WpsResult.Status;
+import android.provider.Settings;
+import android.util.Log;
+
+import com.android.internal.util.State;
+import com.android.internal.util.StateMachine;
+import com.android.server.wifi.util.ApConfigUtil;
+import com.android.internal.util.Protocol;
+import com.android.internal.util.AsyncChannel;
+import java.util.*;
+/// @}
+
+import java.util.ArrayList;
+import java.util.Locale;
+
+/**
+ * Manage WiFi in AP mode.
+ * The internal state machine runs under "WifiStateMachine" thread context.
+ */
+public class SoftApManager {
+    private static final String TAG = "SoftApManager";
+
+    static final int BASE = Protocol.BASE_WIFI;
+    public static final int M_CMD_BLOCK_CLIENT                 = BASE + 300;
+    public static final int M_CMD_UNBLOCK_CLIENT               = BASE + 301;
+    public static final int M_CMD_GET_CLIENTS_LIST             = BASE + 302;
+    public static final int M_CMD_START_AP_WPS                 = BASE + 303;
+
+    private final Context mContext;
+    private final INetworkManagementService mNmService;
+    private final WifiNative mWifiNative;
+    private final ConnectivityManager mConnectivityManager;
+    private final ArrayList<Integer> mAllowed2GChannels;
+
+    private final String mCountryCode;
+
+    private final String mInterfaceName;
+    private String mTetherInterfaceName;
+
+    private final SoftApStateMachine mStateMachine;
+
+    private final Listener mListener;
+
+    /// M: ALPS02992208 memory leak issue
+    private BroadcastReceiver mTetherReceiver;
+
+    /// M: Hotspot manager implementation @{
+    private static final String ACTION_STOP_HOTSPOT =
+                                            "com.android.server.WifiManager.action.STOP_HOTSPOT";
+    public HashMap<String, HotspotClient> mHotspotClients =
+                                                    new HashMap<String, HotspotClient>();
+    private WifiManager mWifiManager;
+
+    private BroadcastReceiver mHotspotStopReceiver;
+    /// @}
+
+    private static class TetherStateChange {
+        public ArrayList<String> available;
+        public ArrayList<String> active;
+
+        TetherStateChange(ArrayList<String> av, ArrayList<String> ac) {
+            available = av;
+            active = ac;
+        }
+    }
+
+    /**
+     * Listener for soft AP state changes.
+     */
+    public interface Listener {
+        /**
+         * Invoke when AP state changed.
+         * @param state new AP state
+         * @param failureReason reason when in failed state
+         */
+        void onStateChanged(int state, int failureReason);
+    }
+
+    public SoftApManager(Context context,
+                         Looper looper,
+                         WifiNative wifiNative,
+                         INetworkManagementService nmService,
+                         ConnectivityManager connectivityManager,
+                         String countryCode,
+                         ArrayList<Integer> allowed2GChannels,
+                         Listener listener) {
+        mStateMachine = new SoftApStateMachine(looper);
+
+        mContext = context;
+        mNmService = nmService;
+        mWifiNative = wifiNative;
+        mConnectivityManager = connectivityManager;
+        mCountryCode = countryCode;
+        mAllowed2GChannels = allowed2GChannels;
+        mListener = listener;
+
+        mInterfaceName = mWifiNative.getInterfaceName();
+
+        /* Register receiver for tether state changes. */
+        /// M: ALPS02992208 memory leak issue @{
+        mTetherReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                /// M @{
+                Log.e(TAG, "onReceive : ConnectivityManager.ACTION_TETHER_STATE_CHANGED");
+                /// @}
+                ArrayList<String> available = intent.getStringArrayListExtra(
+                                    ConnectivityManager.EXTRA_AVAILABLE_TETHER);
+                ArrayList<String> active = intent.getStringArrayListExtra(
+                                    ConnectivityManager.EXTRA_ACTIVE_TETHER);
+                mStateMachine.sendMessage(
+                                    SoftApStateMachine.CMD_TETHER_STATE_CHANGE,
+                                    new TetherStateChange(available, active));
+            }
+        };
+        mContext.registerReceiver(
+                        mTetherReceiver,
+                        new IntentFilter(ConnectivityManager.ACTION_TETHER_STATE_CHANGED));
+        /// @}
+
+        /// M: Hotspot manager implementation @{
+        mWifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+
+        mHotspotStopReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.e(TAG, "onReceive : ACTION_STOP_HOTSPOT");
+                mWifiManager.setWifiApEnabled(null, false);
+            }
+        };
+        mContext.registerReceiver(mHotspotStopReceiver, new IntentFilter(ACTION_STOP_HOTSPOT));
+        /// @}
+    }
+
+    /**
+     * Start soft AP with given configuration.
+     * @param config AP configuration
+     */
+    public void start(WifiConfiguration config) {
+        mStateMachine.sendMessage(SoftApStateMachine.CMD_START, config);
+    }
+
+    /**
+     * Stop soft AP.
+     */
+    public void stop() {
+        mStateMachine.sendMessage(SoftApStateMachine.CMD_STOP);
+    }
+
+    /// M: ALPS02992208 memory leak issue @{
+    public void destroy() {
+        mContext.unregisterReceiver(mTetherReceiver);
+
+        /// M: Hotspot manager implementation @{
+        mContext.unregisterReceiver(mHotspotStopReceiver);
+    }
+    /// @}
+
+    /// M: Hotspot manager implementation @{
+    public void startApWpsCommand(Message message) {
+        mStateMachine.sendMessage(message);
+    }
+
+    public List<HotspotClient> getHotspotClientsList() {
+        List<HotspotClient> clients = new ArrayList<HotspotClient>();
+        synchronized (mHotspotClients) {
+            for (HotspotClient client : mHotspotClients.values()) {
+                clients.add(new HotspotClient(client));
+            }
+        }
+        return clients;
+    }
+
+    public void syncBlockClient(Message message) {
+        mStateMachine.sendMessage(message);
+    }
+
+    public void syncUnblockClient(Message message) {
+        mStateMachine.sendMessage(message);
+    }
+    /// @}
+
+    /**
+     * Update AP state.
+     * @param state new AP state
+     * @param reason Failure reason if the new AP state is in failure state
+     */
+    private void updateApState(int state, int reason) {
+        if (mListener != null) {
+            mListener.onStateChanged(state, reason);
+        }
+    }
+
+    /**
+     * Start a soft AP instance with the given configuration.
+     * @param config AP configuration
+     * @return integer result code
+     */
+    private int startSoftAp(WifiConfiguration config) {
+        if (config == null) {
+            Log.e(TAG, "Unable to start soft AP without configuration");
+            return ERROR_GENERIC;
+        }
+
+        /* Make a copy of configuration for updating AP band and channel. */
+        WifiConfiguration localConfig = new WifiConfiguration(config);
+
+        /// M: ALPS02781485 Move setCountryCodeHal forward for getting the correct 5G channel list
+        /// @{
+        /* Setup country code if it is provide. */
+        if (mCountryCode != null) {
+            /**
+             * Country code is mandatory for 5GHz band, return an error if failed to set
+             * country code when AP is configured for 5GHz band.
+             */
+            if (!mWifiNative.setCountryCodeHal(mCountryCode.toUpperCase(Locale.ROOT))
+                    && config.apBand == WifiConfiguration.AP_BAND_5GHZ) {
+                Log.e(TAG, "Failed to set country code, required for setting up "
+                        + "soft ap in 5GHz");
+                return ERROR_GENERIC;
+            }
+        }
+        /// @}
+        int result = ApConfigUtil.updateApChannelConfig(
+                mWifiNative, mCountryCode, mAllowed2GChannels, localConfig);
+        if (result != SUCCESS) {
+            Log.e(TAG, "Failed to update AP band and channel");
+            return result;
+        }
+
+
+        try {
+            mNmService.startAccessPoint(localConfig, mInterfaceName);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in starting soft AP: " + e);
+            return ERROR_GENERIC;
+        }
+
+        Log.d(TAG, "Soft AP is started");
+
+        return SUCCESS;
+    }
+
+    /**
+     * Teardown soft AP.
+     */
+    private void stopSoftAp() {
+        try {
+            mNmService.stopAccessPoint(mInterfaceName);
+        } catch (Exception e) {
+            Log.e(TAG, "Exception in stopping soft AP: " + e);
+            return;
+        }
+        Log.d(TAG, "Soft AP is stopped");
+    }
+
+    private boolean startTethering(ArrayList<String> available) {
+        String[] wifiRegexs = mConnectivityManager.getTetherableWifiRegexs();
+
+        for (String intf : available) {
+            for (String regex : wifiRegexs) {
+                if (intf.matches(regex)) {
+                    try {
+                        InterfaceConfiguration ifcg =
+                                mNmService.getInterfaceConfig(intf);
+                        if (ifcg != null) {
+                            /* IP/netmask: 192.168.43.1/255.255.255.0 */
+                            ifcg.setLinkAddress(new LinkAddress(
+                                    NetworkUtils.numericToInetAddress("192.168.43.1"), 24));
+                            ifcg.setInterfaceUp();
+
+                            mNmService.setInterfaceConfig(intf, ifcg);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error configuring interface " + intf + ", :" + e);
+                        return false;
+                    }
+
+                    if (mConnectivityManager.tether(intf)
+                            != ConnectivityManager.TETHER_ERROR_NO_ERROR) {
+                        Log.e(TAG, "Error tethering on " + intf);
+                        return false;
+                    }
+                    mTetherInterfaceName = intf;
+                    return true;
+                }
+            }
+        }
+        /* We found no interfaces to tether. */
+        return false;
+    }
+
+    private void stopTethering() {
+        try {
+            /* Clear the interface address. */
+            InterfaceConfiguration ifcg =
+                    mNmService.getInterfaceConfig(mTetherInterfaceName);
+            if (ifcg != null) {
+                ifcg.setLinkAddress(
+                        new LinkAddress(
+                                NetworkUtils.numericToInetAddress("0.0.0.0"), 0));
+                mNmService.setInterfaceConfig(mTetherInterfaceName, ifcg);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error resetting interface " + mTetherInterfaceName + ", :" + e);
+        }
+
+        if (mConnectivityManager.untether(mTetherInterfaceName)
+                != ConnectivityManager.TETHER_ERROR_NO_ERROR) {
+            Log.e(TAG, "Untether initiate failed!");
+        }
+    }
+
+    private boolean isWifiTethered(ArrayList<String> active) {
+        String[] wifiRegexs = mConnectivityManager.getTetherableWifiRegexs();
+        for (String intf : active) {
+            for (String regex : wifiRegexs) {
+                if (intf.matches(regex)) {
+                    return true;
+                }
+            }
+        }
+        /* No tethered interface. */
+        return false;
+    }
+
+    private class SoftApStateMachine extends StateMachine {
+        /* Commands for the state machine. */
+        public static final int CMD_START = 0;
+        public static final int CMD_STOP = 1;
+        public static final int CMD_TETHER_STATE_CHANGE = 2;
+        public static final int CMD_TETHER_NOTIFICATION_TIMEOUT = 3;
+        public static final int CMD_POLL_IP_ADDRESS = 4;
+
+        /// M: Hotspot manager implementation @{
+        /* The base for wifi message types */
+
+        /* Should be the same with WifiStateMachine */
+        private static final int Wifi_SUCCESS = 1;
+        private static final int Wifi_FAILURE = -1;
+
+        private static final int POLL_IP_ADDRESS_INTERVAL_MSECS = 2000;
+        private static final int POLL_IP_TIMES = 15;
+        /// @}
+
+        private static final int TETHER_NOTIFICATION_TIME_OUT_MSECS = 5000;
+
+        /* Sequence number used to track tether notification timeout. */
+        private int mTetherToken = 0;
+
+        private final State mIdleState = new IdleState();
+        private final State mStartedState = new StartedState();
+        private final State mTetheringState = new TetheringState();
+        private final State mTetheredState = new TetheredState();
+        private final State mUntetheringState = new UntetheringState();
+
+        /// M: Hotspot manager implementation @{
+        private final String mMonitorInterfaceName;
+        private WifiMonitor mWifiMonitor;
+        private WifiNative mHotspotNative;
+        private boolean mIsMonitoring = false;
+        private boolean mStartApWps = false;
+        private int mClientNum = 0;
+        /* M: Channel for sending replies. */
+        private AsyncChannel mReplyChannel = new AsyncChannel();
+
+        /* M: For hotspot auto stop */
+        private PendingIntent mIntentStopHotspot;
+        private static final int STOP_HOTSPOT_REQUEST = 2;
+        private static final long HOTSPOT_DISABLE_MS = 5 * 60 * 1000;
+        private int mDuration = Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS;
+        private HandlerThread mSoftApHandlerThread;
+        private HotspotAutoDisableObserver mHotspotAutoDisableObserver;
+        private AlarmManager mAlarmManager;
+
+        /* M: HotspotAutoDisableObserver for watching the setting change */
+        private class HotspotAutoDisableObserver extends ContentObserver {
+            public HotspotAutoDisableObserver(Handler handler) {
+                super(handler);
+                mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.WIFI_HOTSPOT_AUTO_DISABLE), false, this);
+            }
+
+            @Override
+            public void onChange(boolean selfChange) {
+                super.onChange(selfChange);
+                mDuration = Settings.System.getInt(
+                                        mContext.getContentResolver(),
+                                        Settings.System.WIFI_HOTSPOT_AUTO_DISABLE,
+                                        Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
+                if (mDuration != Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_OFF) {
+                    if (mClientNum == 0 &&
+                        getCurrentState() == mTetheredState) {
+                        mAlarmManager.cancel(mIntentStopHotspot);
+                        Log.d(TAG, "Set alarm for setting changed, mDuration:" + mDuration);
+                        mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                            android.os.SystemClock.elapsedRealtime() +
+                            mDuration * HOTSPOT_DISABLE_MS, mIntentStopHotspot);
+                    }
+                } else {
+                    mAlarmManager.cancel(mIntentStopHotspot);
+                }
+            }
+        }
+        /// @}
+
+        SoftApStateMachine(Looper looper) {
+            super(TAG, looper);
+
+            /// M: Hotspot manager implementation @{
+            mHotspotNative = WifiNative.getApNativeInterface();
+            mWifiMonitor = WifiMonitor.getApWifiMonitorInstance();
+            mMonitorInterfaceName = mHotspotNative.getInterfaceName(); //ap0
+            /// @}
+
+            // CHECKSTYLE:OFF IndentationCheck
+            addState(mIdleState);
+                addState(mStartedState, mIdleState);
+                    addState(mTetheringState, mStartedState);
+                    addState(mTetheredState, mStartedState);
+                    addState(mUntetheringState, mStartedState);
+            // CHECKSTYLE:ON IndentationCheck
+
+            setInitialState(mIdleState);
+            start();
+
+            /// M: Hotspot manager implementation @{
+            mWifiMonitor.registerHandler(mMonitorInterfaceName, WifiMonitor.WPS_OVERLAP_EVENT,
+                    getHandler());
+            mWifiMonitor.registerHandler(mMonitorInterfaceName, WifiMonitor.AP_STA_CONNECTED_EVENT,
+                    getHandler());
+            mWifiMonitor.registerHandler(
+                    mMonitorInterfaceName,
+                    WifiMonitor.AP_STA_DISCONNECTED_EVENT,
+                    getHandler());
+            mWifiMonitor.registerHandler(mMonitorInterfaceName, WifiMonitor.SUP_DISCONNECTION_EVENT,
+                    getHandler());
+            /// @}
+        }
+
+        private class IdleState extends State {
+            /// M @{
+            @Override
+            public void enter() {
+                Log.d(TAG, getName());
+            }
+            /// @}
+
+            @Override
+            public boolean processMessage(Message message) {
+                switch (message.what) {
+                    case CMD_START:
+                        updateApState(WifiManager.WIFI_AP_STATE_ENABLING, 0);
+                        int result = startSoftAp((WifiConfiguration) message.obj);
+                        if (result == SUCCESS) {
+                            updateApState(WifiManager.WIFI_AP_STATE_ENABLED, 0);
+                            /// M: Hotspot manager implementation
+                            mWifiMonitor.startMonitoring(mMonitorInterfaceName);
+                            mIsMonitoring = true;
+
+                            transitionTo(mStartedState);
+                        } else {
+                            int reason = WifiManager.SAP_START_FAILURE_GENERAL;
+                            if (result == ERROR_NO_CHANNEL) {
+                                reason = WifiManager.SAP_START_FAILURE_NO_CHANNEL;
+                            }
+                            updateApState(WifiManager.WIFI_AP_STATE_FAILED, reason);
+                        }
+                        break;
+                    /// M: ALPS02835490 the intent is received before entering StartedState,
+                    /// defer the message. Otherwise, the hotspot can't enter TetheredState.
+                    /// Android M(AOSP) also defers this message in SoftApStartingState.
+                    /// @{
+                    case CMD_TETHER_STATE_CHANGE:
+                        deferMessage(message);
+                        break;
+                    /// @}
+                    /// M: Hotspot manager implementation @{
+                    case WifiMonitor.SUP_DISCONNECTION_EVENT:
+                        if (mIsMonitoring) {
+                            // If the disconnection event is from driver, close the connection.
+                            mIsMonitoring = false;
+                            mHotspotNative.closeSupplicantConnection();
+                            mWifiMonitor.stopMonitoring(mMonitorInterfaceName);
+                            Log.d(TAG, "ap0 TEMINATING event");
+                        } else {
+                            // If the disconnection event is from calling stopMonitoring, ignore it
+                            Log.d(TAG, "ap0 is stopped already");
+                        }
+                        break;
+                    /// @}
+                    default:
+                        /* Ignore all other commands. */
+                        break;
+                }
+                return HANDLED;
+            }
+        }
+
+        private class StartedState extends State {
+            @Override
+            public void enter() {
+                Log.d(TAG, getName());
+
+                /// M: Hotspot manager implementation @{
+                /* M: For hotspot auto stop */
+                mAlarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+
+                mSoftApHandlerThread = new HandlerThread("softApThreadForObserver");
+                mSoftApHandlerThread.start();
+                mHotspotAutoDisableObserver = new HotspotAutoDisableObserver(
+                                                    new Handler(mSoftApHandlerThread.getLooper()));
+                Intent stopHotspotIntent = new Intent(ACTION_STOP_HOTSPOT);
+                mIntentStopHotspot = PendingIntent.getBroadcast(
+                                                        mContext,
+                                                        STOP_HOTSPOT_REQUEST,
+                                                        stopHotspotIntent,
+                                                        0);
+                mDuration = Settings.System.getInt(
+                                    mContext.getContentResolver(),
+                                    Settings.System.WIFI_HOTSPOT_AUTO_DISABLE,
+                                    Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_FOR_FIVE_MINS);
+                /// @}
+            }
+
+            @Override
+            public void exit() {
+                // M : ALPS03079881 system_server looper fdleak
+                mSoftApHandlerThread.quit();
+            }
+
+            @Override
+            public boolean processMessage(Message message) {
+                switch (message.what) {
+                    case CMD_START:
+                        /* Already started, ignore this command. */
+                        break;
+                    case CMD_STOP:
+                        updateApState(WifiManager.WIFI_AP_STATE_DISABLING, 0);
+                        stopSoftAp();
+                        updateApState(WifiManager.WIFI_AP_STATE_DISABLED, 0);
+                        transitionTo(mIdleState);
+                        break;
+                    case CMD_TETHER_STATE_CHANGE:
+                        TetherStateChange stateChange = (TetherStateChange) message.obj;
+                        if (startTethering(stateChange.available)) {
+                            transitionTo(mTetheringState);
+                        }
+                        break;
+                    case WifiMonitor.SUP_DISCONNECTION_EVENT:
+                        Log.e(TAG, "Defer SUP_DISCONNECTION_EVENT msg");
+                        deferMessage(message);
+                        break;
+                    default:
+                        return NOT_HANDLED;
+                }
+                return HANDLED;
+            }
+        }
+
+        /**
+         * This is a transient state. We will transition out of this state when
+         * we receive a notification that WiFi is tethered (TetheredState) or
+         * we timed out waiting for that notification (StartedState).
+         */
+        private class TetheringState extends State {
+            @Override
+            public void enter() {
+                Log.d(TAG, getName());
+                /* Send a delayed message to terminate if tethering fails to notify. */
+                sendMessageDelayed(
+                        obtainMessage(CMD_TETHER_NOTIFICATION_TIMEOUT, ++mTetherToken),
+                        TETHER_NOTIFICATION_TIME_OUT_MSECS);
+            }
+
+            @Override
+            public boolean processMessage(Message message) {
+                switch (message.what) {
+                    case CMD_TETHER_STATE_CHANGE:
+                        TetherStateChange stateChange = (TetherStateChange) message.obj;
+                        if (isWifiTethered(stateChange.active)) {
+                            transitionTo(mTetheredState);
+                        }
+                        break;
+                    case CMD_TETHER_NOTIFICATION_TIMEOUT:
+                        if (message.arg1 == mTetherToken) {
+                            Log.e(TAG, "Failed to get tether update, "
+                                    + "shutdown soft access point");
+                            transitionTo(mStartedState);
+                            /* Needs to be first thing handled. */
+                            sendMessageAtFrontOfQueue(CMD_STOP);
+                        }
+                        break;
+                    default:
+                        return NOT_HANDLED;
+                }
+                return HANDLED;
+            }
+        }
+
+        private class TetheredState extends State {
+            /// M: Hotspot manager implementation @{
+            private void sendClientsChangedBroadcast() {
+                Intent intent = new Intent(WifiManager.WIFI_HOTSPOT_CLIENTS_CHANGED_ACTION);
+                intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+                mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+            }
+
+            private void sendClientsIpReadyBroadcast(String mac, String Ip, String deviceName) {
+                Intent intent = new Intent("android.net.wifi.WIFI_HOTSPOT_CLIENTS_IP_READY");
+                intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+                intent.putExtra(WifiManager.EXTRA_DEVICE_ADDRESS, mac);
+                intent.putExtra(WifiManager.EXTRA_IP_ADDRESS, Ip);
+                intent.putExtra(WifiManager.EXTRA_DEVICE_NAME, deviceName);
+
+                mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+            }
+            /// @}
+
+            @Override
+            public void enter() {
+                Log.d(TAG, getName());
+                /// M: Hotspot manager implementation @{
+                // Hotspot auto disable
+                if (mDuration != Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_OFF) {
+                    mAlarmManager.cancel(mIntentStopHotspot);
+                    Log.d(TAG, "Set alarm for enter TetheredState, mDuration:" + mDuration);
+                    mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                        android.os.SystemClock.elapsedRealtime() +
+                        mDuration * HOTSPOT_DISABLE_MS, mIntentStopHotspot);
+                }
+                /// @}
+            }
+
+            @Override
+            public void exit() {
+                if (mDuration != Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_OFF) {
+                    mAlarmManager.cancel(mIntentStopHotspot);
+                }
+                synchronized (mHotspotClients) {
+                    mHotspotClients.clear();
+                }
+                sendClientsChangedBroadcast();
+            }
+
+            @Override
+            public boolean processMessage(Message message) {
+                switch (message.what) {
+                    case CMD_TETHER_STATE_CHANGE:
+                        TetherStateChange stateChange = (TetherStateChange) message.obj;
+                        if (!isWifiTethered(stateChange.active)) {
+                            Log.e(TAG, "Tethering reports wifi as untethered!, "
+                                    + "shut down soft Ap");
+                            sendMessage(CMD_STOP);
+                        }
+                        break;
+                    case CMD_STOP:
+                        Log.d(TAG, "Untethering before stopping AP");
+                        stopTethering();
+                        transitionTo(mUntetheringState);
+                        break;
+                    /// M: Hotspot manager implementation @{
+                    case CMD_POLL_IP_ADDRESS:
+                        String deviceAddress = (String) message.obj;
+                        int count = message.arg1;
+                        String ipAddress = mWifiManager.getClientIp(deviceAddress);
+                        String deviceName = mWifiManager.getClientDeviceName(deviceAddress);
+                        Log.d(TAG, "CMD_POLL_IP_ADDRESS ,deviceAddress = " +
+                              message.obj + " ipAddress = " + ipAddress + ", count = " + count);
+                        if (ipAddress == null && count < POLL_IP_TIMES) {
+                            sendMessageDelayed(CMD_POLL_IP_ADDRESS, ++count, 0, deviceAddress,
+                                               POLL_IP_ADDRESS_INTERVAL_MSECS);
+                        } else if (ipAddress != null) {
+                            sendClientsIpReadyBroadcast(deviceAddress, ipAddress, deviceName);
+                        }
+                        break;
+                    case WifiMonitor.AP_STA_CONNECTED_EVENT:
+                        Log.d(TAG, "AP STA CONNECTED:" + message.obj);
+                        ++mClientNum;
+                        String address = (String) message.obj;
+                        synchronized (mHotspotClients) {
+                            if (!mHotspotClients.containsKey(address)) {
+                                mHotspotClients.put(address, new HotspotClient(address, false));
+                            }
+                        }
+
+                        // Hotspot auto disable
+                        if (mDuration != Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_OFF &&
+                            mClientNum == 1) {
+                            mAlarmManager.cancel(mIntentStopHotspot);
+                        }
+                        int start = 1;
+                        sendMessageDelayed(CMD_POLL_IP_ADDRESS, start, 0, address,
+                                           POLL_IP_ADDRESS_INTERVAL_MSECS);
+
+                        sendClientsChangedBroadcast();
+                        break;
+                    case WifiMonitor.AP_STA_DISCONNECTED_EVENT:
+                        Log.d(TAG, "AP STA DISCONNECTED:" + message.obj);
+                        --mClientNum;
+                        address = (String) message.obj;
+                        synchronized (mHotspotClients) {
+                            HotspotClient client = mHotspotClients.get(address);
+                            if (client != null && !client.isBlocked) {
+                                mHotspotClients.remove(address);
+                            }
+                        }
+
+                        // Hotspot auto disable
+                        if (mDuration != Settings.System.WIFI_HOTSPOT_AUTO_DISABLE_OFF &&
+                            mClientNum == 0) {
+                            Log.d(TAG, "Set alarm for no client, mDuration:" + mDuration);
+                            mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                android.os.SystemClock.elapsedRealtime() +
+                                mDuration * HOTSPOT_DISABLE_MS, mIntentStopHotspot);
+                        }
+
+                        sendClientsChangedBroadcast();
+                        break;
+                    case M_CMD_BLOCK_CLIENT:
+                        boolean result = mHotspotNative.blockClientCommand(
+                                                       ((HotspotClient) message.obj).deviceAddress);
+                        if (result) {
+                            synchronized (mHotspotClients) {
+                                HotspotClient client =
+                                   mHotspotClients.get(((HotspotClient) message.obj).deviceAddress);
+                                if (client != null) {
+                                    client.isBlocked = true;
+                                } else {
+                                    Log.e(TAG, "Failed to get " +
+                                                ((HotspotClient) message.obj).deviceAddress);
+                                }
+                            }
+                            sendClientsChangedBroadcast();
+                        } else {
+                            Log.e(
+                                TAG,
+                                "Failed to block " + ((HotspotClient) message.obj).deviceAddress);
+                        }
+                        mReplyChannel.replyToMessage(
+                                                message,
+                                                message.what,
+                                                result ? Wifi_SUCCESS : Wifi_FAILURE);
+                        break;
+                    case M_CMD_UNBLOCK_CLIENT:
+                        result = mHotspotNative.unblockClientCommand(
+                                                    ((HotspotClient) message.obj).deviceAddress);
+                        if (result) {
+                            synchronized (mHotspotClients) {
+                                mHotspotClients.remove(((HotspotClient) message.obj).deviceAddress);
+                            }
+                            sendClientsChangedBroadcast();
+                        } else {
+                            Log.e(
+                                TAG,
+                                "Failed to unblock " + ((HotspotClient) message.obj).deviceAddress);
+                        }
+                        mReplyChannel.replyToMessage(
+                                                message,
+                                                message.what,
+                                                result ? Wifi_SUCCESS : Wifi_FAILURE);
+                        break;
+                    case M_CMD_START_AP_WPS:
+                        WpsInfo wpsConfig = (WpsInfo) message.obj;
+                        switch (wpsConfig.setup) {
+                            case WpsInfo.PBC:
+                                mStartApWps = true;
+                                mHotspotNative.startApWpsPbcCommand();
+                                break;
+                            case WpsInfo.DISPLAY:
+                                String pin =
+                                    mHotspotNative.startApWpsCheckPinCommand(wpsConfig.pin);
+                                Log.d(TAG, "Check pin result:" + pin);
+                                if (pin != null) {
+                                    mHotspotNative.startApWpsWithPinFromDeviceCommand(pin);
+                                } else {
+                                    Intent intent =
+                                        new Intent(WifiManager.WIFI_WPS_CHECK_PIN_FAIL_ACTION);
+                                    intent.addFlags(
+                                                Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+                                    mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+                                }
+                                break;
+                            default:
+                                Log.e(TAG, "Invalid setup for WPS!");
+                                break;
+                        }
+                        break;
+                    case WifiMonitor.WPS_OVERLAP_EVENT:
+                        if (mStartApWps) {
+                            Intent intent = new Intent(WifiManager.WIFI_HOTSPOT_OVERLAP_ACTION);
+                            intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+                            mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+                            mStartApWps = false;
+                        }
+                        break;
+                    /// @}
+                    default:
+                        return NOT_HANDLED;
+                }
+                return HANDLED;
+            }
+        }
+
+        /**
+         * This is a transient state, will transition out of this state to StartedState
+         * when we receive a notification that WiFi is untethered or we timed out waiting
+         * for that notification.
+         */
+        private class UntetheringState extends State {
+            @Override
+            public void enter() {
+                Log.d(TAG, getName());
+                /* Send a delayed message to terminate if tethering fails to notify. */
+                sendMessageDelayed(
+                        obtainMessage(CMD_TETHER_NOTIFICATION_TIMEOUT, ++mTetherToken),
+                        TETHER_NOTIFICATION_TIME_OUT_MSECS);
+            }
+
+            @Override
+            public boolean processMessage(Message message) {
+                switch (message.what) {
+                    case CMD_TETHER_STATE_CHANGE:
+                        TetherStateChange stateChange = (TetherStateChange) message.obj;
+                        /* Transition back to StartedState when WiFi is untethered. */
+                        if (!isWifiTethered(stateChange.active)) {
+                            transitionTo(mStartedState);
+                            /* Needs to be first thing handled */
+                            sendMessageAtFrontOfQueue(CMD_STOP);
+                        }
+                        break;
+                    case CMD_TETHER_NOTIFICATION_TIMEOUT:
+                        if (message.arg1 == mTetherToken) {
+                            Log.e(TAG, "Failed to get tether update, "
+                                    + "force stop access point");
+                            transitionTo(mStartedState);
+                            /* Needs to be first thing handled. */
+                            sendMessageAtFrontOfQueue(CMD_STOP);
+                        }
+                        break;
+                    default:
+                        /* Defer handling of this message until untethering is completed. */
+                        deferMessage(message);
+                        break;
+                }
+                return HANDLED;
+            }
+        }
+    }
+}
